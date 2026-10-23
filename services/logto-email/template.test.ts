@@ -1,5 +1,3 @@
-/** @jest-environment node */
-
 import { CODE_TTL_SECONDS, renderEmail } from "./template"
 
 test("renders matching HTML and plain text without leaking the OTP into the subject or preview", () => {

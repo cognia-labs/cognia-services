@@ -33,14 +33,13 @@ two independent random secrets of at least 32 characters:
 }
 ```
 
-Deploy with Wrangler (the identity service already has a pinned installation):
+Deploy with the Worker's pinned Wrangler, from this directory:
 
-使用 Wrangler 部署；本仓库 identity service 已有固定版本的安装：
+在本目录下使用固定版本的 Wrangler 部署：
 
 ```sh
-pnpm --dir services/identity-server exec wrangler deploy \
-  --config ../../services/logto-email/wrangler.toml \
-  --secrets-file /absolute/private/worker-secrets.json
+pnpm install --frozen-lockfile
+pnpm exec wrangler deploy --secrets-file /absolute/private/worker-secrets.json
 ```
 
 The custom domain is `logto-email.cognia.cn`; `workers.dev` and preview URLs are
@@ -196,6 +195,10 @@ or establish cold-process/mailbox-delivery latency. See the experiment report be
 1199.5ms 降至 675.5ms；新路径 320/320 接受，基线有 5 次连接失败。
 此结果限定为已有客户端连接池的场景；命名 DO 冷路径仍存在，未重新测公网收信耗时。
 
+The Logto compose stack lives in the app repository (`deploy/compose/`):
+
+Logto 的 compose 部署位于应用仓库的 `deploy/compose/`：
+
 ```sh
 node --test deploy/compose/logto-mail/preload.test.mjs
 docker compose --env-file deploy/compose/.env.logto.local \
@@ -213,11 +216,12 @@ connector credentials, PostgreSQL and Redis in place so quotas and dedupe surviv
 ## Verify and recover / 验证与恢复
 
 ```sh
-pnpm test --runTestsByPath services/logto-email/index.test.ts \
-  services/logto-email/delivery.test.ts services/logto-email/template.test.ts \
-  lib/logto/client.test.ts lib/logto/discovery.test.ts --runInBand
-node scripts/smoke/logto-email-runtime.mjs
+pnpm test && pnpm typecheck
+pnpm smoke:runtime
 ```
+
+The app's Logto client suites (`lib/logto/client.test.ts`, `lib/logto/discovery.test.ts`)
+run in the app repository.
 
 Use Cognia's normal Logto page, enter an account's primary email, confirm that an
 incorrect code is rejected, and complete the received code and required MFA.
@@ -227,21 +231,19 @@ Remove temporary users and revoke their tokens after verification.
 通过 Cognia 的 Logto 登录页实测收信、错误验证码拒绝、正确验证码及 MFA、PKCE 回调
 和 token 校验；完成后删除临时账号并撤销测试 token。
 
-The smoke uses Wrangler's Miniflare/esbuild dependencies from the independently
-managed `services/identity-server` installation. Install that service's dev
-dependencies first if it is not already prepared.
+The smoke uses the Miniflare and esbuild that this Worker's own Wrangler
+installation brings; run `pnpm install` here first.
 
 The smoke runs compiled code in workerd with real local SQLite and a local mail
 receiver. It never sends internet email. It checks 32-request bursts, restart
 dedupe, recipient isolation and cooldown; raw results go under
-`.cache/logto-email-hardening/`. Synthetic latency is not a mailbox delivery
+`.cache/runtime-smoke/`. Synthetic latency is not a mailbox delivery
 benchmark. The durable path adds coordination/storage cost.
 
-smoke 使用独立管理的 `services/identity-server` 安装中的 Wrangler/Miniflare/esbuild；
-尚未准备该环境时，先安装该服务的开发依赖。
+smoke 使用本 Worker 自身 Wrangler 安装中的 Miniflare 与 esbuild，先在本目录执行 `pnpm install`。
 smoke 在 workerd 中运行真实编译产物和本地 SQLite，使用本地收件器，不向公网发信。
 它验证 32 并发、重启去重、收件人隔离与冷却，原始记录位于
-`.cache/logto-email-hardening/`。合成耗时不代表公网邮件速度；持久化协调有额外成本。
+`.cache/runtime-smoke/`。合成耗时不代表公网邮件速度；持久化协调有额外成本。
 
 For a comparison against an already durable revision, keep its source and relative
 imports in a local snapshot and explicitly use `--baseline-durable`. Without that
@@ -252,17 +254,17 @@ a persistence optimization. Use alternating paired batches and check compatibili
 否则基线按旧版无协调发送器处理，不能用于证明持久化优化。交替测量配对批次：
 
 ```sh
-node scripts/smoke/logto-email-runtime.mjs \
+node scripts/runtime-smoke.mjs \
   --baseline /absolute/path/to/baseline/index.ts --baseline-durable \
   --paired --samples 30 --check-compatibility \
-  --output .cache/logto-email-comparison
+  --output .cache/runtime-comparison
 ```
 
 `--guards-only` skips timing and checks restart-safe sliding quotas, unknown
 outcomes, and state compatibility across baseline → current → baseline reloads.
 The clock used by quota fixtures never enters deployment code or timing samples.
 Run local timing separately from builds and tests. Report medians and MAD;
-small changes within noise are inconclusive. The [2026-10-21 experiment report](../../docs/reports/2026-10-21-logto-email-persistence-performance.md)
+small changes within noise are inconclusive. The [2026-10-21 experiment report](https://github.com/MaxQian888/cognia-next/blob/dev/docs/reports/2026-10-21-logto-email-persistence-performance.md)
 records rejected storage/RPC experiments as well as the retained correctness fix.
 
 `--guards-only` 跳过计时，只验证跨进程重启的滑动额度、未知结果不重发，以及升级/回滚的

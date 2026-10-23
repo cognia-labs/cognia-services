@@ -1,5 +1,3 @@
-/** @jest-environment node */
-
 import worker, { type EmailMessage, type Env } from "./index"
 import { renderEmail, type MailInput } from "./template"
 
@@ -7,14 +5,14 @@ const TOKEN = "test-only-token-0123456789abcdef0123456789abcdef"
 const payload = { to: "person@example.com", type: "SignIn", payload: { code: "123456" } }
 
 function setup() {
-  const send = jest.fn(async (_message: EmailMessage) => ({ messageId: "message-1" }))
+  const send = vi.fn(async (_message: EmailMessage) => ({ messageId: "message-1" }))
   const env: Env = {
     LOGTO_EMAIL_TOKEN: TOKEN,
     LOGTO_EMAIL_HASH_KEY: "test-only-hash-key-0123456789abcdef0123456789abcdef",
     MAIL_FROM: "login@status.cognia.cn",
     EMAIL: { send },
     DELIVERY: {
-      getByName: jest.fn(() => ({
+      getByName: vi.fn(() => ({
         fetch: async (request: Request) => {
           const input = (await request.json()) as MailInput
           try {
@@ -59,7 +57,7 @@ test("supports overlapping secret rotation without changing recipient coordinati
   env.LOGTO_EMAIL_PREVIOUS_TOKEN = oldToken
   expect((await worker.fetch(request(payload, `Bearer ${oldToken}`), env)).status).toBe(200)
   expect((await worker.fetch(request(), env)).status).toBe(200)
-  const names = jest.mocked(env.DELIVERY!.getByName).mock.calls.map(([name]) => name)
+  const names = vi.mocked(env.DELIVERY!.getByName).mock.calls.map(([name]) => name)
   expect(names[0]).toBe(names[1])
   expect(names[0]).not.toContain(payload.to)
   expect(names[0]).not.toContain(payload.payload.code)
@@ -73,7 +71,7 @@ test("fails closed without durable coordination or a stable hashing secret", asy
 })
 
 test("bounds the time spent waiting for a stalled request body", async () => {
-  jest.useFakeTimers()
+  vi.useFakeTimers()
   try {
     const { env, send } = setup()
     let reading = false
@@ -92,14 +90,14 @@ test("bounds the time spent waiting for a stalled request body", async () => {
       duplex: "half",
     } as RequestInit)
     const response = worker.fetch(request, env)
-    const realImmediate =
-      jest.requireActual<typeof import("node:timers")>("node:timers").setImmediate
+    const { setImmediate: realImmediate } =
+      await vi.importActual<typeof import("node:timers")>("node:timers")
     while (!reading) await new Promise<void>((resolve) => realImmediate(resolve))
-    await jest.advanceTimersByTimeAsync(3001)
+    await vi.advanceTimersByTimeAsync(3001)
     expect((await response).status).toBe(408)
     expect(send).not.toHaveBeenCalled()
   } finally {
-    jest.useRealTimers()
+    vi.useRealTimers()
   }
 })
 
