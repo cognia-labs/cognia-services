@@ -1,7 +1,7 @@
 # Sync Worker — account sync's device registry, enrollment and op log
 
 The server half of account sync phases 2 and 3a (ADR-0215, protocol
-[`account-sync-protocol.mdx`](../../docs/content/docs/en/data/account-sync-protocol.mdx) §2–7):
+[`account-sync-protocol.mdx`](https://github.com/MaxQian888/cognia-next/blob/dev/docs/content/docs/en/data/account-sync-protocol.mdx) §2–7):
 a Cloudflare Worker with one SQLite Durable Object (`SyncSpace`) per account
 space. It stores the signed device registry, the current epoch's sealed keys,
 enrollment requests and the encrypted op log, and announces changes over a
@@ -82,4 +82,4 @@ curl -i https://sync-staging.cognia.cn/v1/space    # 401 unauthorized
 - **Migrations.** The Durable Object's SQLite schema is created with `IF NOT EXISTS` on first use. The class migration tag `sync-space-v1` in `wrangler.toml` stays forever.
 - **Rollback.** `wrangler rollback [--env staging]`. The schema only ever gains tables or columns.
 - **Misconfiguration.** A bad `ISSUER`, `SYNC_AUDIENCE` or `WEB_ORIGINS` makes every request answer `503 server_misconfigured`, with the reason in the log.
-- Incidents: [`docs/runbooks/sync-worker.md`](../../docs/runbooks/sync-worker.md).
+- Incidents: [`docs/runbooks/sync-worker.md`](https://github.com/MaxQian888/cognia-next/blob/dev/docs/runbooks/sync-worker.md).
