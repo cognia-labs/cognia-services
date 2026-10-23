@@ -1,0 +1,13 @@
+# Dependencies and build output. Every service is its own package with its own
+# lockfile; nothing is installed at the repository root.
+node_modules/
+dist/
+target/
+.wrangler/
+
+# Local secrets. Committed examples and test env files are re-included by the
+# per-service .gitignore files.
+.env*
+!.env.example
+
+.DS_Store
