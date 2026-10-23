@@ -9,8 +9,8 @@ import {
   type CheckObservation,
   type ObservationBatch,
   type ProfileId,
-} from "../../../../lib/status/contract"
-import { base64UrlToBytes, signProbeRequest } from "../../../../lib/status/signing"
+} from "@cognia/status-contract/contract"
+import { base64UrlToBytes, signProbeRequest } from "@cognia/status-contract/signing"
 import type { Env } from "../src/env"
 import { acquireLease, type JobLease } from "../src/platform/lease"
 

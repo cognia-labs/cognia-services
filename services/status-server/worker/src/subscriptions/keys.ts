@@ -16,7 +16,7 @@
  * Secrets are never logged; only key IDs are stored with each row.
  */
 
-import { base64UrlToBytes, bytesToBase64Url, bytesToHex } from "../../../../../lib/status/signing"
+import { base64UrlToBytes, bytesToBase64Url, bytesToHex } from "@cognia/status-contract/signing"
 import type { Env } from "../env"
 
 export const MIN_HMAC_KEY_BYTES = 32

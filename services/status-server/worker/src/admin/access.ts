@@ -21,7 +21,7 @@
  *   request is 503 `unavailable`. There is no unauthenticated fallback.
  */
 
-import { base64UrlToBytes } from "../../../../../lib/status/signing"
+import { base64UrlToBytes } from "@cognia/status-contract/signing"
 import type { Env } from "../env"
 
 export const JWKS_TTL_MS = 10 * 60_000

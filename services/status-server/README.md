@@ -11,8 +11,8 @@ deviations: `docs/plans/2026-10-02-signaling-public-status-implementation.md`.
 | `admin/`  | Operator CLI `cognia-status-admin` (Access-authenticated)                                | `pnpm test`, `pnpm build`, `node dist/… --help` |
 
 Each package is standalone (own `package.json` and lockfile); run
-`pnpm install` inside it. All three bundle the shared contract from
-`lib/status/` by relative path.
+`pnpm install` inside it. All three bundle the shared contract,
+`@cognia/status-contract` (`packages/status-contract`, linked by path).
 
 ## What is measured
 

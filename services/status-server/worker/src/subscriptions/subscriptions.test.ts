@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { parseConfirmResult, parseManageResult } from "../../../../../lib/status/validate"
-import { bytesToBase64Url } from "../../../../../lib/status/signing"
+import { parseConfirmResult, parseManageResult } from "@cognia/status-contract/validate"
+import { bytesToBase64Url } from "@cognia/status-contract/signing"
 import {
   T0,
   MINUTE,

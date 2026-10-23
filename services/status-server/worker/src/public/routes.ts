@@ -12,8 +12,8 @@ import {
   STATUS_SCHEMA_VERSION,
   type HistoryRange,
   type StatusBackendHealth,
-} from "../../../../../lib/status/contract"
-import { toIso } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import { toIso } from "@cognia/status-contract/derive"
 import type { Env } from "../env"
 import { applyPublicCors, errorResponse, json, type RequestContext } from "../platform/http"
 

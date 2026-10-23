@@ -23,7 +23,7 @@
  *   POST /admin/delivery/retry                  deliberate, audited retry
  */
 
-import { STATUS_SCHEMA_VERSION } from "../../../../../lib/status/contract"
+import { STATUS_SCHEMA_VERSION } from "@cognia/status-contract/contract"
 import {
   parseDeliveryRetry,
   parseIncidentCreate,
@@ -34,7 +34,7 @@ import {
   parseProbeDisable,
   parseProbeEnroll,
   parseProbeSetReference,
-} from "../../../../../lib/status/validate"
+} from "@cognia/status-contract/validate"
 import type { Env } from "../env"
 import { relativeApiPath } from "../incidents/ids"
 import {

@@ -5,7 +5,7 @@
  * `runner_error`, never a target failure.
  */
 
-import type { CheckObservation } from "../../../../../lib/status/contract"
+import type { CheckObservation } from "@cognia/status-contract/contract"
 
 import { runHttpCheck } from "./http-check"
 import { runProtocolChecks } from "./protocol-run"

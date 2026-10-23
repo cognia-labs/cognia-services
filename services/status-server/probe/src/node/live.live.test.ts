@@ -7,8 +7,8 @@
 
 import { describe, expect, it } from "vitest"
 
-import type { ProfileId } from "../../../../../lib/status/contract"
-import { parseObservationBatch } from "../../../../../lib/status/validate"
+import type { ProfileId } from "@cognia/status-contract/contract"
+import { parseObservationBatch } from "@cognia/status-contract/validate"
 import { buildObservationBatch, newRunId, runProbeChecks } from "../core"
 import { createNodeTransport } from "./transport"
 

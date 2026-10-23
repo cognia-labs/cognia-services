@@ -3,17 +3,17 @@
  *
  * `GET /healthz` on the signaling host answers with `{ ok, backend, version,
  * capabilities }`. Deciding what that body means is the same question in the
- * app's Connectivity settings (`relay-probe.ts`), the public status Worker and
- * the external status probe (`services/status-server/`), so the decision lives
- * here with no platform transport, no `@/` import and no Node built-in. Both
- * standalone services import this file by relative path and bundle it.
+ * app's Connectivity settings (`lib/signaling/relay-probe.ts` in the app), the
+ * public status Worker and the external status probe (`services/status-server/`),
+ * so the decision lives here with no platform transport and no Node built-in.
+ * Both services and the app import it from `@cognia/status-contract`.
  */
 
 /**
  * The signaling protocol generation this client speaks. Mirrors
- * `SIGNALING_PROTOCOL_VERSION` in `./types`, which cannot be imported here:
- * that module also declares WebRTC DOM types a Worker or Node bundle lacks.
- * `relay-health.test.ts` pins the two equal.
+ * `SIGNALING_PROTOCOL_VERSION` in the app's `lib/signaling/types.ts`, which
+ * cannot be imported here: that module also declares WebRTC DOM types a Worker
+ * or Node bundle lacks. The app's relay-probe test pins the two equal.
  */
 export const RELAY_HEALTH_PROTOCOL_VERSION = 2 as const
 

@@ -25,7 +25,7 @@ import {
   type IncidentDetail,
   type IncidentResolveRequest,
   type IncidentUpdateRequest,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import {
   planError,
   type MutationPlan,

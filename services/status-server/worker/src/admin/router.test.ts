@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { IncidentDetail } from "../../../../../lib/status/contract"
-import { parseIncidentDetail } from "../../../../../lib/status/validate"
+import type { IncidentDetail } from "@cognia/status-contract/contract"
+import { parseIncidentDetail } from "@cognia/status-contract/validate"
 import { reconcileIncidents } from "../incidents/reconcile"
 import { resetAccessKeyCache } from "./access"
 import { handleAdminRoutes } from "./index"

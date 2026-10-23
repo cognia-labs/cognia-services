@@ -82,7 +82,7 @@ wrangler secret put PROBE_SECRETS                 # production, after staging pa
 
 ## 4. Enroll the probe in the registry
 
-Enrollment is an operator action through the admin CLI, `services/status-server/admin`, owned by work-package E. The admin CLI defines the exact flags. Its request is `ProbeEnrollRequest` in `lib/status/contract.ts`, so the command has this shape:
+Enrollment is an operator action through the admin CLI, `services/status-server/admin`, owned by work-package E. The admin CLI defines the exact flags. Its request is `ProbeEnrollRequest` in `packages/status-contract/src/contract.ts`, so the command has this shape:
 
 ```bash
 cognia-status-admin probe enroll \

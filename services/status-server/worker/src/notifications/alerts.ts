@@ -8,7 +8,7 @@
  * carries non-secret identifiers only.
  */
 
-import { HOUR_MS } from "../../../../../lib/status/contract"
+import { HOUR_MS } from "@cognia/status-contract/contract"
 import type { Env } from "../env"
 import { logEvent } from "../platform/http"
 

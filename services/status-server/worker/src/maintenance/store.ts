@@ -19,9 +19,9 @@ import {
   type MaintenanceUpdateKind,
   type MaintenanceUpdateView,
   type MaintenanceView,
-} from "../../../../../lib/status/contract"
-import type { MinuteWindow } from "../../../../../lib/status/derive"
-import { toIso } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import type { MinuteWindow } from "@cognia/status-contract/derive"
+import { toIso } from "@cognia/status-contract/derive"
 import type { WriteGuard } from "../admin/mutation"
 import { newWriteToken, parseJsonColumn, randomId } from "../incidents/ids"
 import {

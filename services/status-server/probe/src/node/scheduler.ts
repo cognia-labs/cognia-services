@@ -10,7 +10,7 @@
  * service failure.
  */
 
-import { MINUTE_MS } from "../../../../../lib/status/contract"
+import { MINUTE_MS } from "@cognia/status-contract/contract"
 
 import type { ProfileConfig } from "./config"
 

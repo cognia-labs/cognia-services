@@ -5,8 +5,6 @@ import {
   relayProtocolMatches,
   type RelayCapabilities,
 } from "./relay-health"
-import * as relayProbe from "./relay-probe"
-import { SIGNALING_PROTOCOL_VERSION } from "./types"
 
 describe("relay-health (pure seam shared with the status service)", () => {
   it("maps signaling URLs to the root health endpoint", () => {
@@ -45,24 +43,16 @@ describe("relay-health (pure seam shared with the status service)", () => {
     ).toBe("legacy")
   })
 
+  // The app pins RELAY_HEALTH_PROTOCOL_VERSION to its signaling client's
+  // SIGNALING_PROTOCOL_VERSION, and its relay probe to these exports.
   it("matches only the protocol generation this client speaks", () => {
     const caps = (protocol: number): RelayCapabilities => ({
       protocol,
       lanes: ["signal", "data"],
       relayDataLane: true,
     })
-    expect(relayProtocolMatches(caps(SIGNALING_PROTOCOL_VERSION))).toBe(true)
-    expect(relayProtocolMatches(caps(SIGNALING_PROTOCOL_VERSION + 1))).toBe(false)
+    expect(relayProtocolMatches(caps(RELAY_HEALTH_PROTOCOL_VERSION))).toBe(true)
+    expect(relayProtocolMatches(caps(RELAY_HEALTH_PROTOCOL_VERSION + 1))).toBe(false)
     expect(relayProtocolMatches(undefined)).toBe(false)
-  })
-
-  it("speaks the same protocol generation as the signaling client", () => {
-    expect(RELAY_HEALTH_PROTOCOL_VERSION).toBe(SIGNALING_PROTOCOL_VERSION)
-  })
-
-  it("is the same implementation the platform probe re-exports", () => {
-    expect(relayProbe.classifyHealthz).toBe(classifyHealthz)
-    expect(relayProbe.relayHealthUrl).toBe(relayHealthUrl)
-    expect(relayProbe.relayProtocolMatches).toBe(relayProtocolMatches)
   })
 })

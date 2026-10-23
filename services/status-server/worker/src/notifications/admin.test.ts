@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { DeliveryView } from "../../../../../lib/status/contract"
+import type { DeliveryView } from "@cognia/status-contract/contract"
 import { resetAccessKeyCache } from "../admin/access"
 import { handleAdminRoutes } from "../admin"
 import {

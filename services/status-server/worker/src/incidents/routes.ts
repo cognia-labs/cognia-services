@@ -4,7 +4,7 @@
  * credentials-free CORS, cacheable for 30 s.
  */
 
-import { STATUS_SCHEMA_VERSION } from "../../../../../lib/status/contract"
+import { STATUS_SCHEMA_VERSION } from "@cognia/status-contract/contract"
 import { errorResponse, json, publicPreflight } from "../platform/http"
 import type { RouteHandler } from "../seams"
 import { relativeApiPath } from "./ids"

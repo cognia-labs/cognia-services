@@ -8,7 +8,7 @@
  * Node built-ins, no `Buffer`, no DOM-only types.
  */
 
-import type { CheckObservation, ProfileId, ReasonCode } from "../../../../../lib/status/contract"
+import type { CheckObservation, ProfileId, ReasonCode } from "@cognia/status-contract/contract"
 
 export interface ProbeLimits {
   /** `GET /healthz` budget (plan §4: 6 s). */

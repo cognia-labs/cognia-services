@@ -7,9 +7,9 @@
  * echo the body.
  */
 
-import type { ObservationAccepted } from "../../../../../lib/status/contract"
-import { verifyProbeRequest } from "../../../../../lib/status/signing"
-import { parseObservationBatch, isUnsupportedSchemaError } from "../../../../../lib/status/validate"
+import type { ObservationAccepted } from "@cognia/status-contract/contract"
+import { verifyProbeRequest } from "@cognia/status-contract/signing"
+import { parseObservationBatch, isUnsupportedSchemaError } from "@cognia/status-contract/validate"
 import type { Env } from "../env"
 import {
   errorResponse,

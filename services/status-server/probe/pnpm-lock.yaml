@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      '@cognia/status-contract':
+        specifier: link:../../../packages/status-contract
+        version: link:../../../packages/status-contract
       ws:
         specifier: 8.22.0
         version: 8.22.0

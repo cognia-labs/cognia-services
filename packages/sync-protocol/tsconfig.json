@@ -1,11 +1,15 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "jest"],
-    "incremental": false,
-    "ignoreDeprecations": "6.0",
-    "paths": {}
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "vitest/globals"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "vitest.config.ts"]
 }

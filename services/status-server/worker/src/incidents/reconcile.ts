@@ -31,7 +31,7 @@ import {
   type ComponentId,
   type IncidentImpact,
   type LocalizedText,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import { featureOn } from "../env"
 import { leaseGuard } from "../platform/lease"
 import { logEvent } from "../platform/http"

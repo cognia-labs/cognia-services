@@ -8,7 +8,7 @@
  * a later phase can never be satisfied by an earlier phase's leftover.
  */
 
-import type { ReasonCode } from "../../../../../lib/status/contract"
+import type { ReasonCode } from "@cognia/status-contract/contract"
 
 import { DeadlineError, ProbeAbortedError, withDeadline } from "./deadline"
 import { ProbeTransportError, type ProbeSocket } from "./types"

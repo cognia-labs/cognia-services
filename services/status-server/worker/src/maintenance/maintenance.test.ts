@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { MaintenanceView } from "../../../../../lib/status/contract"
-import { excludedMinuteCount, mergeMinuteWindows } from "../../../../../lib/status/derive"
+import type { MaintenanceView } from "@cognia/status-contract/contract"
+import { excludedMinuteCount, mergeMinuteWindows } from "@cognia/status-contract/derive"
 import { resetAccessKeyCache } from "../admin/access"
 import { handleAdminRoutes } from "../admin"
 import {

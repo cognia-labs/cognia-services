@@ -6,8 +6,8 @@
  * volume or ordering, and they match the contract's opaque-ID pattern.
  */
 
-import { STATUS_API_PATH } from "../../../../../lib/status/config"
-import { bytesToBase64Url, bytesToHex } from "../../../../../lib/status/signing"
+import { STATUS_API_PATH } from "@cognia/status-contract/config"
+import { bytesToBase64Url, bytesToHex } from "@cognia/status-contract/signing"
 
 function randomBytes(length: number): Uint8Array {
   const bytes = new Uint8Array(length)

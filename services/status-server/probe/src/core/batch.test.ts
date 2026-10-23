@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseObservationBatch } from "../../../../../lib/status/validate"
+import { parseObservationBatch } from "@cognia/status-contract/validate"
 import { buildObservationBatch, newRunId } from "./batch"
 import type { ProbeRunResult } from "./types"
 

@@ -19,7 +19,7 @@ import {
   HOUR_MS,
   type CheckResult,
   type ComponentId,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import {
   addLatencySample,
   emptyLatencyHistogram,
@@ -28,7 +28,7 @@ import {
   mergeLatencyHistograms,
   mergeMinuteWindows,
   type MinuteWindow,
-} from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/derive"
 import { leaseGuard } from "../platform/lease"
 import { logEvent } from "../platform/http"
 import type { JobContext, MaintenanceModule } from "../seams"

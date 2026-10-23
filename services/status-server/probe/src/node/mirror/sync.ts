@@ -17,8 +17,8 @@ import {
   HISTORY_RANGES,
   MAX_SNAPSHOT_BYTES,
   type HistoryRange,
-} from "../../../../../../lib/status/contract"
-import { parsePublicSnapshot } from "../../../../../../lib/status/validate"
+} from "@cognia/status-contract/contract"
+import { parsePublicSnapshot } from "@cognia/status-contract/validate"
 
 import { getText, type FetchLike } from "../http"
 import type { Logger } from "../logger"

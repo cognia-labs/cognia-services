@@ -8,13 +8,13 @@
 import { readFile, stat } from "node:fs/promises"
 import path from "node:path"
 
-import { PROFILE_IDS, type ProfileId } from "../../../../../lib/status/contract"
-import { validateStatusUrl } from "../../../../../lib/status/config"
+import { PROFILE_IDS, type ProfileId } from "@cognia/status-contract/contract"
+import { validateStatusUrl } from "@cognia/status-contract/config"
 import {
   base64UrlToBytes,
   isCanonicalSignedPath,
   MIN_PROBE_SECRET_BYTES,
-} from "../../../../../lib/status/signing"
+} from "@cognia/status-contract/signing"
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
 

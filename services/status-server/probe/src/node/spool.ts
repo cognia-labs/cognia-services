@@ -14,7 +14,7 @@
 import { mkdir, open, readdir, readFile, rename, rm } from "node:fs/promises"
 import path from "node:path"
 
-import { LATE_OBSERVATION_MS } from "../../../../../lib/status/contract"
+import { LATE_OBSERVATION_MS } from "@cognia/status-contract/contract"
 
 export const SPOOL_MAX_AGE_MS = LATE_OBSERVATION_MS
 export const SPOOL_MAX_BYTES = 1024 * 1024

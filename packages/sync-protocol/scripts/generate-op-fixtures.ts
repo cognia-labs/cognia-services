@@ -7,7 +7,7 @@
  * the registry vectors. The same rule holds: do NOT rerun this to make a
  * failing test pass; a mismatch means the wire format changed.
  *
- *   pnpm exec tsx packages/sync-protocol/scripts/generate-op-fixtures.ts
+ *   pnpm fixtures:generate:ops   (inside packages/sync-protocol)
  */
 
 // static-export-exempt: manual Node fixture writer, outside package src exports and app imports.

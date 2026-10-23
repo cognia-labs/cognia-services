@@ -22,9 +22,9 @@ import {
   type CheckObservation,
   type ObservationBatch,
   type StatusErrorCode,
-} from "../../../../../lib/status/contract"
-import { hourOf, minuteOf } from "../../../../../lib/status/derive"
-import { sha256Hex } from "../../../../../lib/status/signing"
+} from "@cognia/status-contract/contract"
+import { hourOf, minuteOf } from "@cognia/status-contract/derive"
+import { sha256Hex } from "@cognia/status-contract/signing"
 import { markHoursDirtyStatements } from "../aggregate/dirty"
 import { logEvent } from "../platform/http"
 import {

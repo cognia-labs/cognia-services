@@ -4,7 +4,7 @@
  * body cap so a misbehaving origin cannot make the runner buffer megabytes.
  */
 
-import type { ReasonCode } from "../../../../../lib/status/contract"
+import type { ReasonCode } from "@cognia/status-contract/contract"
 import { ProbeTransportError } from "../core/types"
 
 const DNS_CODES = new Set(["ENOTFOUND", "EAI_AGAIN", "EAI_FAIL", "EAI_NONAME", "EAI_NODATA"])

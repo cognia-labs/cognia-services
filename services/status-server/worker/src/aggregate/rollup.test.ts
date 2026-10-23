@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { DAY_MS, HOUR_MS, type ComponentId } from "../../../../../lib/status/contract"
-import type { MinuteWindow } from "../../../../../lib/status/derive"
+import { DAY_MS, HOUR_MS, type ComponentId } from "@cognia/status-contract/contract"
+import type { MinuteWindow } from "@cognia/status-contract/derive"
 import { lease, resetCore, testEnv } from "../../test/helpers"
 import { leaseGuard } from "../platform/lease"
 import { markMinutesDirty } from "./dirty"

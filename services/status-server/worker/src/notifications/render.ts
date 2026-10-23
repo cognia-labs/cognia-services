@@ -21,8 +21,8 @@ import type {
   IncidentImpact,
   IncidentState,
   StatusLocale,
-} from "../../../../../lib/status/contract"
-import { pickLocalized } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import { pickLocalized } from "@cognia/status-contract/derive"
 import { COMPONENT_LABELS } from "../incidents/templates"
 import type { IncidentEventPayload, MaintenanceEventPayload } from "./events"
 

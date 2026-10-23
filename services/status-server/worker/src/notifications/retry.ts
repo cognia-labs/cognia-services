@@ -19,7 +19,7 @@
  *   `acknowledgeUncertain: true`, which is audited.
  */
 
-import { HOUR_MS, MINUTE_MS } from "../../../../../lib/status/contract"
+import { HOUR_MS, MINUTE_MS } from "@cognia/status-contract/contract"
 
 export type SendOutcome =
   | { kind: "accepted"; messageId: string }

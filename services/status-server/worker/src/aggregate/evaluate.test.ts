@@ -5,8 +5,8 @@ import {
   type CheckObservation,
   type CheckResult,
   type ProfileId,
-} from "../../../../../lib/status/contract"
-import { addLatencySample, emptyLatencyHistogram } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import { addLatencySample, emptyLatencyHistogram } from "@cognia/status-contract/derive"
 import type { ProbeRecord, Registry } from "../registry/registry"
 import { evaluateComponents, latencyDegraded } from "./evaluate"
 import type { RecentEvidence, RecentRun, ReferenceSlot } from "./evidence"

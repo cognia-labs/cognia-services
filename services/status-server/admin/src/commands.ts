@@ -19,7 +19,7 @@ import {
   type ProbeDisableRequest,
   type ProbeEnrollRequest,
   type ProbeSetReferenceRequest,
-} from "../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import {
   parseDeliveryRetry,
   parseIncidentCreate,
@@ -31,7 +31,7 @@ import {
   parseProbeEnroll,
   parseProbeSetReference,
   type ParseResult,
-} from "../../../../lib/status/validate"
+} from "@cognia/status-contract/validate"
 import {
   UsageError,
   integerValue,

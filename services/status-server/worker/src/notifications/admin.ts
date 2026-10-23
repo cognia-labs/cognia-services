@@ -15,8 +15,8 @@ import {
   type DeliveryRetryRequest,
   type DeliveryState,
   type DeliveryView,
-} from "../../../../../lib/status/contract"
-import { toIso } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import { toIso } from "@cognia/status-contract/derive"
 import { planError, type MutationPlan, type OperatorContext } from "../admin/mutation"
 import { newWriteToken } from "../incidents/ids"
 

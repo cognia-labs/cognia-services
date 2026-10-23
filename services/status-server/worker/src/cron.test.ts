@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import type { ComponentId, IncidentSummary, MaintenanceView } from "../../../../lib/status/contract"
-import type { MinuteWindow } from "../../../../lib/status/derive"
-import { parsePublicSnapshot } from "../../../../lib/status/validate"
+import type { ComponentId, IncidentSummary, MaintenanceView } from "@cognia/status-contract/contract"
+import type { MinuteWindow } from "@cognia/status-contract/derive"
+import { parsePublicSnapshot } from "@cognia/status-contract/validate"
 import { FakeRelay } from "../../probe/src/testing/fake-relay"
 import { currentMinute, minuteMs, resetCore, seedRegistry, testEnv } from "../test/helpers"
 import { runAggregation, runScheduled, RETENTION_MINUTE, type CronModules } from "./cron"

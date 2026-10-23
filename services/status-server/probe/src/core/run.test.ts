@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseObservationBatch } from "../../../../../lib/status/validate"
+import { parseObservationBatch } from "@cognia/status-contract/validate"
 import { FakeRelay, type FakeRelayOptions } from "../testing/fake-relay"
 import { buildObservationBatch } from "./batch"
 import { RelayBudget } from "./protocol-run"

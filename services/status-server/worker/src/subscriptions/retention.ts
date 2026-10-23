@@ -15,7 +15,7 @@
  * Every write is lease-guarded and bounded per run.
  */
 
-import { DAY_MS, HOUR_MS } from "../../../../../lib/status/contract"
+import { DAY_MS, HOUR_MS } from "@cognia/status-contract/contract"
 import { logEvent } from "../platform/http"
 import { leaseGuard } from "../platform/lease"
 import type { JobContext } from "../seams"

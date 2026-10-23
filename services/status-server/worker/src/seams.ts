@@ -23,8 +23,8 @@ import type {
   ProbeSource,
   ProfileId,
   ReasonCode,
-} from "../../../../lib/status/contract"
-import type { MinuteWindow, Streaks } from "../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import type { MinuteWindow, Streaks } from "@cognia/status-contract/derive"
 import type { Env } from "./env"
 import type { RequestContext } from "./platform/http"
 import type { JobLease } from "./platform/lease"

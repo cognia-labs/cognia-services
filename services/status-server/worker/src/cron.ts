@@ -14,8 +14,8 @@
  * so a broken mail provider never stops the public snapshot.
  */
 
-import { DAY_MS, HOUR_MS, MINUTE_MS, type ComponentId } from "../../../../lib/status/contract"
-import { minuteOf } from "../../../../lib/status/derive"
+import { DAY_MS, HOUR_MS, MINUTE_MS, type ComponentId } from "@cognia/status-contract/contract"
+import { minuteOf } from "@cognia/status-contract/derive"
 import { loadRecentEvidence } from "./aggregate/evidence"
 import { evaluateComponents } from "./aggregate/evaluate"
 import { summarizeProbes } from "./aggregate/probes"

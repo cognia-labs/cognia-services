@@ -8,9 +8,9 @@
  * is recorded as `unknown` / `runner_error`: observer failure, not an outage.
  */
 
-import { OFFICIAL_SIGNALING_HOST } from "../../../../../lib/status/config"
-import type { CheckObservation, ProfileId } from "../../../../../lib/status/contract"
-import { minuteOf } from "../../../../../lib/status/derive"
+import { OFFICIAL_SIGNALING_HOST } from "@cognia/status-contract/config"
+import type { CheckObservation, ProfileId } from "@cognia/status-contract/contract"
+import { minuteOf } from "@cognia/status-contract/derive"
 import {
   buildObservationBatch,
   newRunId,

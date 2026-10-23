@@ -32,7 +32,7 @@ import {
   type ProbeSummary,
   type PublicStatusSnapshot,
   type StatusCapabilities,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import {
   addSlotCounts,
   bucketStatus,
@@ -49,7 +49,7 @@ import {
   type MinuteWindow,
   type RawSlotCounts,
   type TimeBucket,
-} from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/derive"
 import { leaseGuard } from "../platform/lease"
 import { logEvent } from "../platform/http"
 import { nextCounter } from "../platform/store"

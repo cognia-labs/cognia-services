@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { bytesToBase64Url } from "../../../../../lib/status/signing"
+import { bytesToBase64Url } from "@cognia/status-contract/signing"
 import { T0, MINUTE, baseEnv, count, jobAt, resetOwnerE, stealLease } from "../admin/test-support"
 import type { Env } from "../env"
 import { emailHmacs, encKeyRing, encryptEmail, hmacKeyRing } from "./keys"

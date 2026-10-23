@@ -13,9 +13,9 @@
  * row not existing yet, so a replayed fan-out mints nothing extra.
  */
 
-import { DAY_MS, type StatusLocale } from "../../../../../lib/status/contract"
-import { statusIncidentPageUrl, statusTokenPageUrl } from "../../../../../lib/status/config"
-import { sha256Hex } from "../../../../../lib/status/signing"
+import { DAY_MS, type StatusLocale } from "@cognia/status-contract/contract"
+import { statusIncidentPageUrl, statusTokenPageUrl } from "@cognia/status-contract/config"
+import { sha256Hex } from "@cognia/status-contract/signing"
 import type { WriteGuard } from "../admin/mutation"
 import type { Env } from "../env"
 import { randomId, randomToken } from "../incidents/ids"

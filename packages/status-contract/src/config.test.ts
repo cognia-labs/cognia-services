@@ -1,6 +1,6 @@
-import { STATUS_PAGE_URL } from "../constants/external-urls"
 import {
   DEFAULT_STATUS_API_BASE,
+  STATUS_PAGE_URL,
   parseStatusRuntimeMeta,
   parseStatusTokenFragment,
   resolveStatusRuntime,

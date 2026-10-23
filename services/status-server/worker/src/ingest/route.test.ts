@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { LATE_OBSERVATION_MS, SIGNATURE_WINDOW_MS } from "../../../../../lib/status/contract"
+import { LATE_OBSERVATION_MS, SIGNATURE_WINDOW_MS } from "@cognia/status-contract/contract"
 import {
   batch,
   check,

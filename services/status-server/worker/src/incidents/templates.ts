@@ -6,7 +6,7 @@
  * never names a cause; an operator adds context with a manual update.
  */
 
-import type { ComponentId, IncidentImpact, LocalizedText } from "../../../../../lib/status/contract"
+import type { ComponentId, IncidentImpact, LocalizedText } from "@cognia/status-contract/contract"
 
 export const COMPONENT_LABELS: Readonly<Record<ComponentId, LocalizedText & { "zh-CN": string }>> =
   {

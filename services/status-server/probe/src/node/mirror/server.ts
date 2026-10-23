@@ -15,8 +15,8 @@ import { readFile, realpath, stat } from "node:fs/promises"
 import http from "node:http"
 import path from "node:path"
 
-import { HISTORY_RANGES, type HistoryRange } from "../../../../../../lib/status/contract"
-import { STATUS_API_PATH } from "../../../../../../lib/status/config"
+import { HISTORY_RANGES, type HistoryRange } from "@cognia/status-contract/contract"
+import { STATUS_API_PATH } from "@cognia/status-contract/config"
 
 import type { Logger } from "../logger"
 import { injectRuntimeMeta } from "./html"

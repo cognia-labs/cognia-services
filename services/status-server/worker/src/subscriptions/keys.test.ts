@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { bytesToBase64Url } from "../../../../../lib/status/signing"
+import { bytesToBase64Url } from "@cognia/status-contract/signing"
 import { baseEnv } from "../admin/test-support"
 import {
   decryptEmail,

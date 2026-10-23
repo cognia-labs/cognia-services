@@ -15,8 +15,8 @@
  * ID can be retried after fixing the cause.
  */
 
-import type { ParseResult } from "../../../../../lib/status/validate"
-import { sha256Hex } from "../../../../../lib/status/signing"
+import type { ParseResult } from "@cognia/status-contract/validate"
+import { sha256Hex } from "@cognia/status-contract/signing"
 import { committed } from "../incidents/store"
 import { errorResponse, json, logEvent, readJsonBody, type RequestContext } from "../platform/http"
 import { auditStatement, findOperation, recordOperationStatement } from "../platform/store"

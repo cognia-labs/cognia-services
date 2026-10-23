@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { parseIncidentDetail, parseIncidentPage } from "../../../../../lib/status/validate"
+import { parseIncidentDetail, parseIncidentPage } from "@cognia/status-contract/validate"
 import { T0, MINUTE, baseEnv, context, readJson, resetOwnerE } from "../admin/test-support"
 import { handleIncidentRoutes, loadIncidentsForSnapshot } from "./index"
 import {

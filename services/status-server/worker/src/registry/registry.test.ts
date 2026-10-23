@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { PROFILE_FRESH_MS, REFERENCE_FRESH_MS } from "../../../../../lib/status/contract"
+import { PROFILE_FRESH_MS, REFERENCE_FRESH_MS } from "@cognia/status-contract/contract"
 import { EXT_KEY_ID, OTHER_KEY_ID, resetCore, seedRegistry, testEnv } from "../../test/helpers"
 import {
   cadenceDue,

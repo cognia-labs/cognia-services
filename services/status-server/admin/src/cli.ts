@@ -5,7 +5,7 @@
  * safe result or the error envelope (409s show the current revision).
  */
 
-import { DEFAULT_STATUS_API_BASE, validateStatusUrl } from "../../../../lib/status/config"
+import { DEFAULT_STATUS_API_BASE, validateStatusUrl } from "@cognia/status-contract/config"
 import { UsageError } from "./args"
 import { AuthError, ACCESS_TOKEN_HEADER, resolveAccessToken, type CommandRunner } from "./auth"
 import { buildCommand, type Operation } from "./commands"

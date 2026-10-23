@@ -9,8 +9,8 @@ import {
   MAX_SNAPSHOT_BYTES,
   type CheckObservation,
   type ReasonCode,
-} from "../../../../../lib/status/contract"
-import { parsePublicSnapshot } from "../../../../../lib/status/validate"
+} from "@cognia/status-contract/contract"
+import { parsePublicSnapshot } from "@cognia/status-contract/validate"
 
 import { ProbeTransportError } from "../core/types"
 import { getText, type FetchLike } from "./http"

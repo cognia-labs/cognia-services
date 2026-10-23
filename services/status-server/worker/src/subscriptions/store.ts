@@ -7,7 +7,7 @@ import type {
   ComponentId,
   StatusLocale,
   SubscriptionPreferences,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import { parseJsonColumn } from "../incidents/ids"
 import type { SubscriberRef } from "../notifications/outbox"
 import { maskEmail } from "./email"

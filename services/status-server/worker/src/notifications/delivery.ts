@@ -29,7 +29,7 @@
  * tokens, subjects or bodies.
  */
 
-import { DAY_MS, type DeliveryState } from "../../../../../lib/status/contract"
+import { DAY_MS, type DeliveryState } from "@cognia/status-contract/contract"
 import { featureOn, type Env } from "../env"
 import { logEvent } from "../platform/http"
 import { leaseGuard, leaseHeld } from "../platform/lease"

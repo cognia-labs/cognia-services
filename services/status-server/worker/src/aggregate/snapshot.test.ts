@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { DAY_MS, HOUR_MS, MINUTE_MS, type ComponentId } from "../../../../../lib/status/contract"
-import { parsePublicSnapshot } from "../../../../../lib/status/validate"
+import { DAY_MS, HOUR_MS, MINUTE_MS, type ComponentId } from "@cognia/status-contract/contract"
+import { parsePublicSnapshot } from "@cognia/status-contract/validate"
 import type { EvaluatedComponent } from "./evaluate"
 import {
   computeRollup,

@@ -1,11 +1,11 @@
 /**
  * Runtime `<meta>` injection for the exported status page. The page reads
- * `<meta name="cognia-status-runtime">` (lib/status/config.ts) to learn it is
+ * `<meta name="cognia-status-runtime">` (@cognia/status-contract/config) to learn it is
  * a read-only mirror with a same-origin API, which disables every consent
  * write regardless of what a copied snapshot advertises.
  */
 
-import { STATUS_API_PATH, STATUS_RUNTIME_META_NAME } from "../../../../../../lib/status/config"
+import { STATUS_API_PATH, STATUS_RUNTIME_META_NAME } from "@cognia/status-contract/config"
 
 export const MIRROR_RUNTIME_CONTENT = JSON.stringify({ mode: "mirror", apiBase: STATUS_API_PATH })
 

@@ -21,9 +21,9 @@ import {
   type IncidentUpdateView,
   type LocalizedText,
   type UpdateSource,
-} from "../../../../../lib/status/contract"
-import { toIso } from "../../../../../lib/status/derive"
-import { base64UrlToBytes, bytesToBase64Url } from "../../../../../lib/status/signing"
+} from "@cognia/status-contract/contract"
+import { toIso } from "@cognia/status-contract/derive"
+import { base64UrlToBytes, bytesToBase64Url } from "@cognia/status-contract/signing"
 import type { WriteGuard } from "../admin/mutation"
 import {
   guardedEventStatement,

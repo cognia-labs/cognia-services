@@ -4,8 +4,8 @@ import path from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import type { ObservationBatch } from "../../../../../lib/status/contract"
-import { PROBE_HEADERS, verifyProbeRequest } from "../../../../../lib/status/signing"
+import type { ObservationBatch } from "@cognia/status-contract/contract"
+import { PROBE_HEADERS, verifyProbeRequest } from "@cognia/status-contract/signing"
 import { AlertSink } from "./alerts"
 import { backoffDelay, IngestionQueue } from "./ingest"
 import { memoryLogger } from "./logger"

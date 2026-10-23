@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { createStatusFixture } from "../../../../../lib/status/fixtures"
+import { createStatusFixture } from "@cognia/status-contract/fixtures"
 import { executionContext, resetCore, testEnv } from "../../test/helpers"
 import worker from "../index"
 import { stampServerTime } from "./routes"

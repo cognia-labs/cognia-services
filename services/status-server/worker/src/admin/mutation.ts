@@ -10,7 +10,7 @@
  * but its own zero-row UPDATE.
  */
 
-import type { StatusErrorCode } from "../../../../../lib/status/contract"
+import type { StatusErrorCode } from "@cognia/status-contract/contract"
 import type { AuditEntry } from "../platform/store"
 
 export interface WriteGuard {

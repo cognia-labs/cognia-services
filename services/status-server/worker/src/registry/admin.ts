@@ -15,8 +15,8 @@ import {
   type ProbeDisableRequest,
   type ProbeEnrollRequest,
   type ProbeSetReferenceRequest,
-} from "../../../../../lib/status/contract"
-import { minuteOf, toIso } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import { minuteOf, toIso } from "@cognia/status-contract/derive"
 import { summarizeProbes } from "../aggregate/probes"
 import type { Env } from "../env"
 import { auditStatement } from "../platform/store"

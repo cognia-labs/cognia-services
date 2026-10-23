@@ -36,12 +36,12 @@ import {
   type StatusErrorCode,
   type SubscribeAccepted,
   type UnsubscribeResult,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import {
   parseManageRequest,
   parseSubscribeRequest,
   parseTokenRequest,
-} from "../../../../../lib/status/validate"
+} from "@cognia/status-contract/validate"
 import type { Env } from "../env"
 import { newWriteToken, randomId, relativeApiPath } from "../incidents/ids"
 import { committed } from "../incidents/store"

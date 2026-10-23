@@ -10,7 +10,7 @@
  *   subscriber row (`last_confirmation_sent_at`) inside its own CAS.
  */
 
-import { HOUR_MS, MINUTE_MS } from "../../../../../lib/status/contract"
+import { HOUR_MS, MINUTE_MS } from "@cognia/status-contract/contract"
 import type { Env } from "../env"
 import { hmacWithSecret } from "./keys"
 

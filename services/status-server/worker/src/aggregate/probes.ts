@@ -9,8 +9,8 @@ import {
   type ProbeHealth,
   type ProbeSummary,
   type ReasonCode,
-} from "../../../../../lib/status/contract"
-import { minuteOf, toIso } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import { minuteOf, toIso } from "@cognia/status-contract/derive"
 import { loadRecentEvidence, runSucceeded, type RecentEvidence, type RecentRun } from "./evidence"
 import {
   freshnessForCadence,

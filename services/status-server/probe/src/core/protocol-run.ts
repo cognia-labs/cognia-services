@@ -10,7 +10,7 @@
  * is involved, and nothing bypasses the relay's normal admission.
  */
 
-import type { CheckObservation, ReasonCode } from "../../../../../lib/status/contract"
+import type { CheckObservation, ReasonCode } from "@cognia/status-contract/contract"
 import {
   createRoom,
   randomBase64Url,

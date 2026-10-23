@@ -8,7 +8,7 @@
  * a CSP that limits it to this origin; the app's PWA manifest link is removed.
  */
 
-import { STATUS_RUNTIME_META_NAME } from "../../../../lib/status/config"
+import { STATUS_RUNTIME_META_NAME } from "@cognia/status-contract/config"
 import type { Env } from "./env"
 
 export const STATUS_CSP = [

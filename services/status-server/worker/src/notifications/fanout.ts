@@ -15,7 +15,7 @@
  * a day-old incident update arriving now would mislead more than inform.
  */
 
-import { HOUR_MS, type ComponentId } from "../../../../../lib/status/contract"
+import { HOUR_MS, type ComponentId } from "@cognia/status-contract/contract"
 import { parseJsonColumn } from "../incidents/ids"
 import { leaseGuard } from "../platform/lease"
 import { logEvent } from "../platform/http"

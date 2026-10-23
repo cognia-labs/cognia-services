@@ -14,8 +14,8 @@ import {
   type LocalizedText,
   type ProbeSource,
   type ProfileId,
-} from "../../../../../lib/status/contract"
-import { base64UrlToBytes, MIN_PROBE_SECRET_BYTES } from "../../../../../lib/status/signing"
+} from "@cognia/status-contract/contract"
+import { base64UrlToBytes, MIN_PROBE_SECRET_BYTES } from "@cognia/status-contract/signing"
 import type { Env } from "../env"
 
 export interface ProfileConfig {

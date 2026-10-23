@@ -3,7 +3,7 @@
  * signed ingestion, plus self-alerting and an optional co-hosted mirror.
  */
 
-import type { CheckObservation } from "../../../../../lib/status/contract"
+import type { CheckObservation } from "@cognia/status-contract/contract"
 
 import { buildObservationBatch, newRunId, runProbeChecks, type ProbeTransport } from "../core"
 import { AlertSink } from "./alerts"

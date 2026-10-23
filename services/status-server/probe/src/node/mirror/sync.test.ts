@@ -4,9 +4,9 @@ import path from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import type { HistoryRange } from "../../../../../../lib/status/contract"
-import { createStatusFixture } from "../../../../../../lib/status/fixtures"
-import { parsePublicSnapshot } from "../../../../../../lib/status/validate"
+import type { HistoryRange } from "@cognia/status-contract/contract"
+import { createStatusFixture } from "@cognia/status-contract/fixtures"
+import { parsePublicSnapshot } from "@cognia/status-contract/validate"
 import type { FetchLike } from "../http"
 import { memoryLogger } from "../logger"
 import { MIRROR_RESOURCES, MirrorSync, readSyncState } from "./sync"

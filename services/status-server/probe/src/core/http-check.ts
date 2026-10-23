@@ -1,16 +1,16 @@
 /**
  * The `signalingHttp` check: public DNS/TLS/HTTP to `GET /healthz`, with the
- * body judged by the shared pure parser (`lib/signaling/relay-health.ts`), so
+ * body judged by the shared pure parser (`@cognia/status-contract/relay-health`), so
  * the probe, the status Worker and the app's Connectivity settings agree on
  * what "a ready Cognia rendezvous" means.
  */
 
-import type { CheckObservation, ReasonCode } from "../../../../../lib/status/contract"
+import type { CheckObservation, ReasonCode } from "@cognia/status-contract/contract"
 import {
   classifyHealthz,
   relayHealthUrl,
   relayProtocolMatches,
-} from "../../../../../lib/signaling/relay-health"
+} from "@cognia/status-contract/relay-health"
 
 import { DeadlineError, ProbeAbortedError, withDeadline } from "./deadline"
 import { ProbeTransportError, type ProbeLimits, type ProbeTransport } from "./types"

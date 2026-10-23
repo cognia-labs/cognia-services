@@ -7,7 +7,7 @@
  * Do NOT rerun this to make a failing fixtures test pass: a mismatch means the
  * protocol changed, which needs a new version (v2), not new v1 vectors.
  *
- *   pnpm exec tsx packages/sync-protocol/scripts/generate-fixtures.ts
+ *   pnpm fixtures:generate   (inside packages/sync-protocol)
  */
 
 // static-export-exempt: manual Node fixture writer, outside package src exports and app imports.

@@ -9,7 +9,7 @@ import {
   type CheckResult,
   type ProfileId,
   type ReasonCode,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 
 /** Long enough for four 300 s cadence slots plus grace. */
 export const RECENT_RUN_WINDOW_MS = 35 * MINUTE_MS

@@ -8,7 +8,7 @@ import {
   MAX_REQUEST_BODY_BYTES,
   type StatusErrorBody,
   type StatusErrorCode,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 
 export interface RequestContext {
   requestId: string

@@ -20,7 +20,7 @@ import {
   type ComponentId,
   type EvidenceSummary,
   type ReasonCode,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import {
   deriveComponentStatus,
   dueEndMinute,
@@ -31,7 +31,7 @@ import {
   toIso,
   type SlotOutcome,
   type WitnessEvidence,
-} from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/derive"
 import {
   cadenceMinutes,
   freshnessForCadence,

@@ -5,7 +5,7 @@
  * left is picked up by the next hourly run.
  */
 
-import { DAY_MS, HOUR_MS, MINUTE_MS } from "../../../../lib/status/contract"
+import { DAY_MS, HOUR_MS, MINUTE_MS } from "@cognia/status-contract/contract"
 import { HOURLY_RETENTION_MS, SLOT_RETENTION_MS } from "./aggregate/rollup"
 import { leaseGuard } from "./platform/lease"
 import type { JobContext } from "./seams"

@@ -16,11 +16,11 @@
  * Leaf module: the caller reads `process.env` / the DOM and passes values in.
  */
 
-import { STATUS_PAGE_URL } from "../constants/external-urls"
-
 export const DEFAULT_STATUS_ORIGIN = "https://status.cognia.cn"
 /** The relay host the official status service monitors; nothing else. */
 export const OFFICIAL_SIGNALING_HOST = "signaling.cognia.cn"
+/** The public status page. The app links here from Settings and its footer. */
+export const STATUS_PAGE_URL = "https://status.cognia.cn/status/"
 export const DEFAULT_STATUS_PAGE_URL = STATUS_PAGE_URL
 export const STATUS_API_PATH = "/api/status/v1"
 export const DEFAULT_STATUS_API_BASE = `${DEFAULT_STATUS_ORIGIN}${STATUS_API_PATH}`

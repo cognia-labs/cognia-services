@@ -1,6 +1,6 @@
 // Bundle the operator CLI into one ESM file. The shared contract and parsers
-// under ../../../lib/status are inlined (plain Node cannot import the
-// repo-root TypeScript leaves unbuilt); only Node built-ins stay external,
+// from @cognia/status-contract are inlined (plain Node cannot import that
+// source-only TypeScript package unbuilt); only Node built-ins stay external,
 // so the artifact runs with a bare `node` (>= 22).
 
 import { builtinModules } from "node:module"
@@ -27,7 +27,11 @@ const result = await build({
 })
 
 const inputs = Object.keys(result.metafile.inputs)
-for (const needle of ["lib/status/contract.ts", "lib/status/validate.ts", "lib/status/config.ts"]) {
+for (const needle of [
+  "status-contract/src/contract.ts",
+  "status-contract/src/validate.ts",
+  "status-contract/src/config.ts",
+]) {
   if (!inputs.some((input) => input.includes(needle))) {
     console.error(`build: expected ${needle} to be bundled`)
     process.exit(1)

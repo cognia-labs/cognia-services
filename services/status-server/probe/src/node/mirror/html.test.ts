@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseStatusRuntimeMeta } from "../../../../../../lib/status/config"
+import { parseStatusRuntimeMeta } from "@cognia/status-contract/config"
 import { injectRuntimeMeta, MIRROR_RUNTIME_CONTENT } from "./html"
 
 function metaContents(html: string): string[] {

@@ -1,9 +1,9 @@
 // Bundle the Node runner into one ESM file: the portable core, the shared
-// contract under ../../../lib/status, the signaling synthetic-room helpers and
+// contract from @cognia/status-contract, the signaling synthetic-room helpers and
 // `ws` are all inlined. Only Node built-ins stay external, so the artifact
 // runs with a bare `node` (>= 22) and nothing else installed.
 //
-// Plain Node cannot import the repo-root TypeScript leaves unbuilt
+// Plain Node cannot import the source-only contract package unbuilt
 // (extensionless relative imports), which is why this is a bundle rather
 // than a tsc emit.
 
@@ -43,9 +43,9 @@ const result = await build({
 
 const inputs = Object.keys(result.metafile.inputs)
 const mustInclude = [
-  "lib/status/contract.ts",
-  "lib/status/signing.ts",
-  "lib/signaling/relay-health.ts",
+  "status-contract/src/contract.ts",
+  "status-contract/src/signing.ts",
+  "status-contract/src/relay-health.ts",
   "synthetic-room.mjs",
   "node_modules/ws",
 ]

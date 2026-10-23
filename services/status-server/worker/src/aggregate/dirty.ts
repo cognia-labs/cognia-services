@@ -5,7 +5,7 @@
  * not move meanwhile, so work that arrives during a rebuild is never lost.
  */
 
-import { HOUR_MS, MINUTE_MS } from "../../../../../lib/status/contract"
+import { HOUR_MS, MINUTE_MS } from "@cognia/status-contract/contract"
 import { incrementCounterStatement } from "../platform/store"
 
 /** Upper bound on hours one call may mark (a 400-day retroactive edit). */

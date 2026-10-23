@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { createStatusFixture } from "../../../../../lib/status/fixtures"
+import { createStatusFixture } from "@cognia/status-contract/fixtures"
 import type { FetchLike } from "./http"
 import { runMonitoringChecks } from "./monitoring"
 

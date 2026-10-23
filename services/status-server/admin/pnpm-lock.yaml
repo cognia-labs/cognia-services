@@ -10,6 +10,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      '@cognia/status-contract':
+        specifier: link:../../../packages/status-contract
+        version: link:../../../packages/status-contract
     devDependencies:
       '@types/node':
         specifier: ^26.6.3

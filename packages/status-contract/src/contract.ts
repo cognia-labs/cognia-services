@@ -5,15 +5,16 @@
  * exported `/status` page, the Cognia Settings link, the status Worker
  * (`services/status-server/worker`), its external Node probe
  * (`services/status-server/probe`) and the operator CLI
- * (`services/status-server/admin`). The standalone services import this file
- * by relative path and bundle it, so it must stay a leaf: no React, no `@/`
- * alias, no Dexie, no native platform module and no Node built-in.
+ * (`services/status-server/admin`). The services and the app import it from
+ * `@cognia/status-contract` and bundle it, so it must stay a leaf: no React,
+ * no app alias, no Dexie, no native platform module and no Node built-in.
  *
  * Meaning is frozen per `schemaVersion`. Adding an optional field is allowed;
  * changing what an existing field means requires version 2. A reader that
  * meets an unsupported version shows "unknown", never a preview.
  *
- * Plan: docs/plans/2026-10-02-signaling-public-status-implementation.md.
+ * Plan: docs/plans/2026-10-02-signaling-public-status-implementation.md in the
+ * app repository.
  */
 
 export const STATUS_SCHEMA_VERSION = 1 as const

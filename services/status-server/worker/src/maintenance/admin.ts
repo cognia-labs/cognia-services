@@ -25,8 +25,8 @@ import {
   type MaintenanceChangeRequest,
   type MaintenanceScheduleRequest,
   type MaintenanceState,
-} from "../../../../../lib/status/contract"
-import type { MinuteWindow } from "../../../../../lib/status/derive"
+} from "@cognia/status-contract/contract"
+import type { MinuteWindow } from "@cognia/status-contract/derive"
 import { markMinuteRangeDirtyStatements } from "../aggregate/dirty"
 import {
   planError,

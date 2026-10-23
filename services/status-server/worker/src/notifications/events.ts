@@ -15,7 +15,7 @@ import type {
   IncidentImpact,
   IncidentState,
   LocalizedText,
-} from "../../../../../lib/status/contract"
+} from "@cognia/status-contract/contract"
 import type { WriteGuard } from "../admin/mutation"
 
 export interface IncidentEventPayload {

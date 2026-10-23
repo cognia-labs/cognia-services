@@ -11,7 +11,7 @@
  * - operator alert de-duplication rows older than 30 days are deleted.
  */
 
-import { DAY_MS } from "../../../../../lib/status/contract"
+import { DAY_MS } from "@cognia/status-contract/contract"
 import { logEvent } from "../platform/http"
 import { leaseGuard } from "../platform/lease"
 import type { JobContext } from "../seams"

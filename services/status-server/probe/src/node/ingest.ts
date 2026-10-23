@@ -15,8 +15,8 @@
  *   ages out of the 10-minute late-acceptance window.
  */
 
-import { signProbeRequest } from "../../../../../lib/status/signing"
-import type { ObservationBatch } from "../../../../../lib/status/contract"
+import { signProbeRequest } from "@cognia/status-contract/signing"
+import type { ObservationBatch } from "@cognia/status-contract/contract"
 
 import type { AlertSink } from "./alerts"
 import type { FetchLike } from "./http"

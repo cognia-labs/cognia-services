@@ -6,7 +6,7 @@
 
 import { env } from "cloudflare:test"
 
-import { bytesToBase64Url } from "../../../../../lib/status/signing"
+import { bytesToBase64Url } from "@cognia/status-contract/signing"
 import type { Env } from "../env"
 import { createRequestContext, type RequestContext } from "../platform/http"
 import { acquireLease, type JobLease } from "../platform/lease"

@@ -10,8 +10,8 @@ import {
   type CheckObservation,
   type ObservationBatch,
   type ProfileId,
-} from "../../../../../lib/status/contract"
-import { parseObservationBatch } from "../../../../../lib/status/validate"
+} from "@cognia/status-contract/contract"
+import { parseObservationBatch } from "@cognia/status-contract/validate"
 import { randomBase64Url } from "../../../../signaling-server/worker/tests/synthetic-room.mjs"
 
 import type { ProbeRunResult } from "./types"

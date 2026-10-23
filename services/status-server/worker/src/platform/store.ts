@@ -3,7 +3,7 @@
  * idempotency records and the append-only audit log.
  */
 
-import { sha256Hex } from "../../../../../lib/status/signing"
+import { sha256Hex } from "@cognia/status-contract/signing"
 
 /** Increment and return a named counter. */
 export async function nextCounter(db: D1Database, name: string): Promise<number> {

@@ -20,8 +20,8 @@ import type {
   LocalizedText,
   MaintenanceState,
   MaintenanceUpdateKind,
-} from "../../../../../lib/status/contract"
-import { statusIncidentPageUrl } from "../../../../../lib/status/config"
+} from "@cognia/status-contract/contract"
+import { statusIncidentPageUrl } from "@cognia/status-contract/config"
 import type { Env } from "../env"
 import { parseJsonColumn } from "../incidents/ids"
 import { COMPONENT_LABELS } from "../incidents/templates"

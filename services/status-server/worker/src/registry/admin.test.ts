@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 
-import type { ProbeEnrollRequest } from "../../../../../lib/status/contract"
+import type { ProbeEnrollRequest } from "@cognia/status-contract/contract"
 import { currentMinute, minuteMs, resetCore, seedRegistry, testEnv } from "../../test/helpers"
 import { enrollProbe, listProbesForAdmin, setProbeDisabled, setReferenceProbe } from "./admin"
 import { loadRegistry, referenceForMinute } from "./registry"

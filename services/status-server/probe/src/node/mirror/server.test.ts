@@ -6,7 +6,7 @@ import path from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { createStatusFixture } from "../../../../../../lib/status/fixtures"
+import { createStatusFixture } from "@cognia/status-contract/fixtures"
 import { memoryLogger } from "../logger"
 import { MIRROR_RUNTIME_CONTENT } from "./html"
 import { createMirrorServer, MIRROR_CSP, resolveStaticPath } from "./server"
