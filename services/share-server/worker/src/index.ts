@@ -194,7 +194,7 @@ function hexToBytes(value: string): Uint8Array | null {
  *
  * The wire format is `base64url(claimsJson).base64url(hmacSha256(payload))`,
  * the same one `crates/cognia-tenant-auth` mints and `core/src/grant.rs`
- * verifies. A frozen vector at `crates/cognia-tenant-auth/fixtures/` pins all
+ * verifies. A frozen vector (`../fixtures/grant-wire-vector.json`) pins all
  * three against each other, because a silent divergence would look like
  * "sharing stopped working" and nothing else.
  *

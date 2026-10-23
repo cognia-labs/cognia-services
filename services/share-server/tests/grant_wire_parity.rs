@@ -1,34 +1,33 @@
-//! The share service and `crates/cognia-tenant-auth` must agree on the grant
-//! wire format — ADR-0149 §8.
+//! The share service and the app's `crates/cognia-tenant-auth` must agree on
+//! the grant wire format — ADR-0149 §8.
 //!
 //! This service verifies grants with its own implementation
-//! (`cognia_share_core::grant`) because `.github/workflows/images.yml` builds
-//! it with `context: services/share-server`: a `path = "../../crates/…"`
-//! dependency resolves under `cargo test` and then fails inside Docker, where
-//! the parent directory does not exist.
+//! (`cognia_share_core::grant`): the crate that mints them lives in the app
+//! repository, and this service builds with its own directory as the Docker
+//! context besides.
 //!
 //! Duplicated code that nothing pins drifts. The drift would be invisible
 //! until grants the collaboration server mints started being rejected here —
 //! in production, reported as "sharing stopped working".
 //!
-//! So both sides verify the same frozen bytes. The fixture lives beside the
-//! crate that owns the format; a *test* may read across the repository even
-//! though a dependency may not, because tests never run inside the image.
+//! So both sides verify the same frozen bytes. The app's crate owns the
+//! format and its fixture; `fixtures/grant-wire-vector.json` here is a
+//! byte-identical copy, and the app's pinned-services check fails the moment
+//! the two copies differ.
 
 use std::path::PathBuf;
 
 use cognia_share_core::grant::{GrantError, GrantVerifier};
 
 fn vector() -> serde_json::Value {
-    // Two hops up from this crate's manifest directory: the fixture belongs to
-    // the owning crate, not to a copy kept here that could be edited alone.
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../crates/cognia-tenant-auth/fixtures/grant-wire-vector.json");
+    // A byte-identical copy of the owning crate's fixture; editing it alone
+    // fails the app's pinned-services check.
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/grant-wire-vector.json");
     let raw = std::fs::read_to_string(&path).unwrap_or_else(|error| {
         panic!(
             "the frozen grant vector must be readable at {}: {error}. \
              It is the only thing keeping these two implementations in step — \
-             do not delete it, and do not copy it into this directory.",
+             do not delete it, and never edit it without the app's copy.",
             path.display()
         )
     });

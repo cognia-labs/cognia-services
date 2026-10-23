@@ -1,19 +1,20 @@
-// The Worker, the self-hosted Rust server, and `crates/cognia-tenant-auth`
-// must agree on the grant wire format — ADR-0149 §8.
+// The Worker, the self-hosted Rust server, and the app's
+// `crates/cognia-tenant-auth` must agree on the grant wire format — ADR-0149 §8.
 //
 // Three implementations exist because neither service can depend on that
-// crate: `.github/workflows/images.yml` builds them with their own directory
-// as the Docker context, and this one is TypeScript besides. Duplicated code
+// crate: it lives in the app repository, and this one is TypeScript besides. Duplicated code
 // that nothing pins drifts, and the drift would surface only in production, as
 // "sharing stopped working".
 //
-// So all three verify the same frozen bytes. The fixture lives beside the
-// crate that owns the format. Never regenerate it: a change to it IS a wire
-// break, and it should be as hard to make silently as any other one.
+// So all three verify the same frozen bytes: `fixtures/grant-wire-vector.json`
+// is a byte-identical copy of the owning crate's fixture, and the app's
+// pinned-services check fails when they differ. Never regenerate it: a change
+// to it IS a wire break, and it should be as hard to make silently as any
+// other one.
 
 import { describe, it, expect } from "vitest"
 
-import vector from "../../../../crates/cognia-tenant-auth/fixtures/grant-wire-vector.json"
+import vector from "../../fixtures/grant-wire-vector.json"
 
 function base64UrlToBytes(value: string): Uint8Array {
   const padded = value.replaceAll("-", "+").replaceAll("_", "/")

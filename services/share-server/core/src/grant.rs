@@ -10,16 +10,15 @@
 //!
 //! # Why it is a second implementation
 //!
-//! `crates/cognia-tenant-auth` owns this format, and this crate does not
-//! depend on it. That is not an oversight — `.github/workflows/images.yml`
-//! builds this service with `context: services/share-server`, so a
-//! `path = "../../crates/…"` dependency resolves under `cargo test` and then
-//! fails inside Docker, where the parent directory does not exist. The ADR
-//! records the same constraint for `services/diagnostic-server`. Changing a
-//! deploy pipeline's build context to serve a refactor is the worse trade.
+//! The app's `crates/cognia-tenant-auth` owns this format, and this crate does
+//! not depend on it: that crate lives in the app repository, and this service
+//! builds with its own directory as the Docker context. The ADR records the
+//! same constraint for `services/diagnostic-server`.
 //!
 //! So the wire format is duplicated and the duplication is PINNED: a frozen
-//! test vector, checked in beside the owning crate, is verified by both. A
+//! test vector, owned by that crate and copied byte-for-byte into
+//! `fixtures/grant-wire-vector.json`, is verified by both; the app's
+//! pinned-services check fails when the two copies differ. A
 //! silent divergence would mean grants that the collaboration server mints and
 //! this service rejects — visible only in production, and only as "sharing
 //! stopped working".
