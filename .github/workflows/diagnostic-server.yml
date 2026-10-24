@@ -66,6 +66,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: MinIO builds from pinned official sources
+        run: node --test services/diagnostic-server/deploy/minio-pin.test.mjs
+
       - uses: docker/setup-buildx-action@v4
 
       - name: Up + wait (build, migrate, seed, serve)
