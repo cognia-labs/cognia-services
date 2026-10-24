@@ -54,8 +54,8 @@ src/alert.rs       alert delivery worker (webhook, SMTP, OTel log signal)
   days, attachments 30, metadata 90, symbols 180. Tenants can override them
   (`retentionOverrides`, at most 3650 days). Failed jobs retry with backoff.
 - **Alerts.** Six kinds, each queued once per configured transport: the
-  webhook (when `ALERT_WEBHOOK_URL` is set), SMTP (when all three
-  `ALERT_SMTP_*` variables are set; a partial setup refuses to start) and an
+  webhook (when `ALERT_WEBHOOK_URL` is set), SMTP (when `ALERT_SMTP_URL` is set; it then needs
+  `ALERT_SMTP_FROM` and `ALERT_SMTP_TO` or the server refuses to start) and an
   OTel log signal (always). Failed deliveries retry up to 10 times.
 
   | Kind                 | Raised when                                                                                                                      | Once per                  |
@@ -167,7 +167,7 @@ subcommands.
 | `ALERT_WEBHOOK_URL`                  | unset                                           | Webhook target                                                              |
 | `ALERT_WEBHOOK_SECRET`               | unset                                           | HMAC secret for `x-cognia-signature`                                        |
 | `ALERT_SMTP_URL`                     | unset                                           | SMTP transport URL                                                          |
-| `ALERT_SMTP_FROM` / `ALERT_SMTP_TO`  | unset                                           | Sender and recipient for SMTP alerts; set all three SMTP variables or none  |
+| `ALERT_SMTP_FROM` / `ALERT_SMTP_TO`  | unset                                           | Sender and recipient; required once `ALERT_SMTP_URL` is set                 |
 | `ALERT_DEDUPE_WINDOW_SECONDS`        | `3600`                                          | Window for the once-per-window kinds                                        |
 | `ALERT_SPIKE_WINDOW_SECONDS`         | `3600`                                          | Trailing window a crash spike is counted over                               |
 | `ALERT_SPIKE_BASELINE_WINDOWS`       | `24`                                            | Earlier windows that form the baseline, 1 to 720                            |

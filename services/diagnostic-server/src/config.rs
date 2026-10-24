@@ -324,27 +324,23 @@ fn validate_migration_switches(migrate_only: bool, run_migrations: bool) -> anyh
     Ok(())
 }
 
-/// SMTP alerting is all or nothing.
+/// SMTP alerting is on exactly when `ALERT_SMTP_URL` is set, and then needs a
+/// valid sender and recipient.
 ///
-/// A partial setup used to start cleanly and then fail every SMTP delivery
-/// permanently (`smtp_from_missing`, …). Refusing it at startup names the
-/// missing variable once instead of leaving a failed row per alert.
+/// A URL without either used to start cleanly and then fail every SMTP
+/// delivery permanently (`smtp_from_missing`, …). Refusing it at startup names
+/// the missing variable once instead of leaving a failed row per alert. A
+/// sender or recipient without a URL is harmless — the compose file ships
+/// defaults for both — and leaves SMTP off.
 fn validate_smtp(url: Option<&str>, from: Option<&str>, to: Option<&str>) -> anyhow::Result<()> {
-    let present = [url, from, to]
-        .iter()
-        .filter(|value| value.is_some())
-        .count();
-    if present == 0 {
+    if url.is_none() {
         return Ok(());
     }
-    if present != 3 {
-        bail!("ALERT_SMTP_URL, ALERT_SMTP_FROM and ALERT_SMTP_TO must be set together");
-    }
-    from.unwrap_or_default()
-        .parse::<lettre::message::Mailbox>()
+    let from = from.context("ALERT_SMTP_URL is set, so ALERT_SMTP_FROM must be too")?;
+    let to = to.context("ALERT_SMTP_URL is set, so ALERT_SMTP_TO must be too")?;
+    from.parse::<lettre::message::Mailbox>()
         .context("parse ALERT_SMTP_FROM")?;
-    to.unwrap_or_default()
-        .parse::<lettre::message::Mailbox>()
+    to.parse::<lettre::message::Mailbox>()
         .context("parse ALERT_SMTP_TO")?;
     Ok(())
 }
@@ -401,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn smtp_alerting_is_configured_completely_or_not_at_all() {
+    fn smtp_alerting_needs_a_sender_and_recipient_once_its_url_is_set() {
         assert!(validate_smtp(None, None, None).is_ok());
         assert!(validate_smtp(
             Some("smtp://mail.test:25"),
@@ -413,6 +409,9 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(partial.contains("ALERT_SMTP_FROM"), "{partial}");
+        // Addresses without a URL leave SMTP off rather than failing: the
+        // compose file defaults both.
+        assert!(validate_smtp(None, Some("diagnostics@localhost"), Some("ops@localhost")).is_ok());
         let invalid = validate_smtp(
             Some("smtp://mail.test:25"),
             Some("not an address"),

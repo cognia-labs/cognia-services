@@ -54,8 +54,8 @@ impl AlertPolicy {
         if config.alert_webhook_url.is_some() {
             transports.push("webhook");
         }
-        // `ServerConfig::from_env` refuses a partial SMTP setup, so all three
-        // are present or none is.
+        // `ServerConfig::from_env` refuses a URL without a sender and
+        // recipient; addresses alone (the compose defaults) leave SMTP off.
         if config.alert_smtp_url.is_some()
             && config.alert_smtp_from.is_some()
             && config.alert_smtp_to.is_some()
@@ -426,6 +426,14 @@ mod tests {
         assert_eq!(
             AlertPolicy::from_config(&webhook).transports,
             vec!["webhook", "otel"]
+        );
+
+        let mut addresses_only = config();
+        addresses_only.alert_smtp_from = Some("alerts@cognia.test".to_owned());
+        addresses_only.alert_smtp_to = Some("ops@cognia.test".to_owned());
+        assert_eq!(
+            AlertPolicy::from_config(&addresses_only).transports,
+            vec!["otel"]
         );
 
         let mut both = webhook.clone();
