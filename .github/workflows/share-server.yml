@@ -1,0 +1,96 @@
+name: Share Server
+
+# ============================================================================
+# share-server (Rust + Cloudflare Worker) — test + coverage gate
+# ============================================================================
+# The public share-link service (ADR-0037): a Cargo workspace (axum server +
+# `core/`) and a TypeScript Cloudflare Worker with its own lockfile. The Rust
+# tests run under a >=90% line gate; the Worker's specs run inside workerd
+# (vitest-pool-workers) so R2 + KV bindings behave like production.
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/share-server/**"
+      - "rust-toolchain.toml"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/share-server.yml"
+  pull_request:
+    paths:
+      - "services/share-server/**"
+      - "rust-toolchain.toml"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/share-server.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: share-server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: services/share-server
+
+jobs:
+  test:
+    name: Test + Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup pinned Rust toolchain
+        run: |
+          rustup show active-toolchain
+          rustup component add llvm-tools-preview clippy
+
+      - name: Cache cargo + target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "services/share-server -> target"
+          key: share-server-native
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test with coverage (>=90% lines)
+        run: cargo llvm-cov --workspace --all-targets --fail-under-lines 90 --summary-only
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          echo "## share-server coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cargo llvm-cov report >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  worker:
+    name: Worker (typecheck + vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/share-server/worker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up the Worker
+        uses: ./.github/actions/setup-package
+        with:
+          directory: services/share-server/worker
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test (vitest / miniflare)
+        run: pnpm test

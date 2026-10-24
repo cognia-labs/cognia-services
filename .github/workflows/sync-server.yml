@@ -1,0 +1,58 @@
+name: Sync Server
+
+# ============================================================================
+# sync-server — account sync's device registry and enrollment (ADR-0215)
+# ============================================================================
+# A Cloudflare Worker (SQLite Durable Objects) with its own lockfile. It links
+# packages/sync-protocol, so a protocol change runs this suite too. Its specs
+# run inside workerd via @cloudflare/vitest-pool-workers, including the frozen
+# protocol vectors.
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/sync-server/**"
+      - "packages/sync-protocol/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/sync-server.yml"
+  pull_request:
+    paths:
+      - "services/sync-server/**"
+      - "packages/sync-protocol/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/sync-server.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  worker:
+    name: Worker (typecheck + vitest + bundle)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/sync-server
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up the Worker
+        uses: ./.github/actions/setup-package
+        with:
+          directory: services/sync-server
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test (vitest / workerd)
+        run: pnpm test
+
+      - name: Bundle
+        run: pnpm build

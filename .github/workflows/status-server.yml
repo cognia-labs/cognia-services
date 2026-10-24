@@ -1,0 +1,67 @@
+name: Status Server
+
+# ============================================================================
+# status-server — the public status service (ADR-0211)
+# ============================================================================
+# Three packages, each its own pnpm root: the Cloudflare Worker (D1 history,
+# ingestion, incidents, mail, admin, assets), the external Node probe +
+# read-only mirror, and the operator CLI. All three link
+# packages/status-contract, and the probe drives the relay with the signaling
+# Worker's synthetic-room helpers, so changes to either rerun this lane.
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/status-server/**"
+      - "packages/status-contract/**"
+      - "services/signaling-server/worker/tests/synthetic-room.*"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/status-server.yml"
+  pull_request:
+    paths:
+      - "services/status-server/**"
+      - "packages/status-contract/**"
+      - "services/signaling-server/worker/tests/synthetic-room.*"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/status-server.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: status-server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [worker, probe, admin]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/status-server/${{ matrix.package }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up the package
+        uses: ./.github/actions/setup-package
+        with:
+          directory: services/status-server/${{ matrix.package }}
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      # The Worker's build is a wrangler dry run against the tracked asset
+      # placeholder; the real status-only export is attached at deploy time.
+      - name: Build
+        run: pnpm build

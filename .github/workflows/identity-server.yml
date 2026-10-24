@@ -1,0 +1,60 @@
+name: Identity Server
+
+# ============================================================================
+# identity-server — the official Cognia account's OIDC issuer (ADR-0215 §2)
+# ============================================================================
+# A Cloudflare Worker (Better Auth + D1) with its own lockfile. Its specs run
+# inside workerd via @cloudflare/vitest-pool-workers against a local D1 with
+# every migration applied, so the SQL Better Auth issues runs for real.
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/identity-server/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/identity-server.yml"
+  pull_request:
+    paths:
+      - "services/identity-server/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/identity-server.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: identity-server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  worker:
+    name: Worker (typecheck + vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/identity-server
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up the Worker
+        uses: ./.github/actions/setup-package
+        with:
+          directory: services/identity-server
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test (vitest / miniflare + D1)
+        run: pnpm test
+
+      - name: Schema is generated
+        # A config change that alters Better Auth's schema must ship its
+        # generated migration; the drift test catches it, this keeps the
+        # generator itself runnable.
+        run: |
+          pnpm schema:generate drift_check
+          test -z "$(git status --porcelain -- migrations)"

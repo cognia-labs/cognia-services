@@ -1,0 +1,30 @@
+name: Set up a standalone package
+description: >
+  Install pnpm at the version the package's `packageManager` names, Node from
+  the repository's .nvmrc, and the package's own locked dependencies. Every
+  package in this repository is its own pnpm root with its own lockfile.
+
+inputs:
+  directory:
+    description: Package directory, relative to the repository root
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+      with:
+        package_json_file: ${{ inputs.directory }}/package.json
+
+    - name: Setup Node
+      uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+        cache-dependency-path: ${{ inputs.directory }}/pnpm-lock.yaml
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: pnpm install --frozen-lockfile --prefer-offline

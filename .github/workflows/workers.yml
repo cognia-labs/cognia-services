@@ -1,0 +1,70 @@
+name: Small Workers
+
+# ============================================================================
+# The single-package Cloudflare Workers without a Rust twin:
+#   - update-server/worker — signed update catalog storage (ADR-0224 A10)
+#   - logto-email          — Logto HTTP email connector → Email Sending
+# Each is its own pnpm root with its own lockfile. The Logto mail Worker also
+# runs its workerd runtime smoke (real local SQLite, local mail receiver; it
+# never sends internet mail).
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/update-server/**"
+      - "services/logto-email/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/workers.yml"
+  pull_request:
+    paths:
+      - "services/update-server/**"
+      - "services/logto-email/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/workers.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: workers-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  worker:
+    name: ${{ matrix.directory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: services/update-server/worker
+            smoke: false
+          - directory: services/logto-email
+            smoke: true
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up the Worker
+        uses: ./.github/actions/setup-package
+        with:
+          directory: ${{ matrix.directory }}
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Bundle
+        run: pnpm build
+
+      - name: Runtime smoke (workerd)
+        if: matrix.smoke
+        run: pnpm smoke:runtime

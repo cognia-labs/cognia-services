@@ -1,0 +1,57 @@
+name: Contracts
+
+# ============================================================================
+# The wire contracts this repository owns and the app consumes at a pinned
+# revision (see the README):
+#   - packages/sync-protocol   @cognia/sync-protocol (ADR-0215)
+#   - packages/status-contract @cognia/status-contract (ADR-0211, ADR-0170)
+# Both are source-only TypeScript with no runtime dependencies. Their frozen
+# vectors are what the app's pinned check compares against.
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/contracts.yml"
+  pull_request:
+    paths:
+      - "packages/**"
+      - ".github/actions/setup-package/**"
+      - ".github/workflows/contracts.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [sync-protocol, status-contract]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/${{ matrix.package }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up the package
+        uses: ./.github/actions/setup-package
+        with:
+          directory: packages/${{ matrix.package }}
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
