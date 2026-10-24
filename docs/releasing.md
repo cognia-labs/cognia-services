@@ -18,15 +18,18 @@ so `latest` must always be a tested tag.
 1. Make sure every workflow on the `main` commit you are tagging is green.
 2. Move the entries under `## Unreleased` in [`CHANGELOG.md`](../CHANGELOG.md) to a
    new `## X.Y.Z — YYYY-MM-DD` section and merge that change.
-3. Tag the merge commit with a signed, annotated tag and push it:
+3. Tag the merge commit with an annotated tag under your GitHub identity and
+   push it:
 
    ```bash
-   git tag -s vX.Y.Z -m "cognia-services vX.Y.Z"
+   git -c tag.gpgSign=false tag -a vX.Y.Z -m "cognia-services vX.Y.Z"
    git push origin vX.Y.Z
    ```
 
-   With `tag.gpgSign` set and no TTY attached, gpg cannot ask for the passphrase;
-   run `export GPG_TTY=$(tty)` first.
+   `git cat-file -p vX.Y.Z` should show your GitHub name and email as the
+   tagger. Sign the tag (`git tag -s`) only with a GPG or SSH key that is
+   uploaded to that GitHub account; a global `user.signingkey` from another
+   identity puts the wrong name on the release and shows as unverified.
 
 4. Watch `images.yml` for the tag. Then check that each package under the
    organisation's **Packages** tab is public, so compose users can pull it
