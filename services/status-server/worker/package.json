@@ -15,7 +15,8 @@
     "migrate:staging": "wrangler d1 migrations apply cognia-status-staging --remote --env staging",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "pnpm --dir ../probe install --frozen-lockfile --prefer-offline"
   },
   "dependencies": {
     "@cognia/status-contract": "link:../../../packages/status-contract"

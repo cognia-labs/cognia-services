@@ -12,7 +12,9 @@ deviations: `docs/plans/2026-10-02-signaling-public-status-implementation.md`.
 
 Each package is standalone (own `package.json` and lockfile); run
 `pnpm install` inside it. All three bundle the shared contract,
-`@cognia/status-contract` (`packages/status-contract`, linked by path).
+`@cognia/status-contract` (`packages/status-contract`, linked by path). The Worker also
+bundles the probe's portable core (`probe/src/core`), so installing the Worker
+installs the probe's dependencies too (its `postinstall`).
 
 ## What is measured
 

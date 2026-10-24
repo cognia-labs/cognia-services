@@ -624,12 +624,13 @@ fn blob_path_is_valid(code: &str, blob_id: &str) -> bool {
 }
 
 /// The owner check every blob write shares: the share must exist and be
-/// live, and the caller must own it exactly as for stats / delete.
+/// live, and the caller must own it exactly as for stats / delete. The
+/// rejection is boxed: an axum `Response` is too large for an `Err` variant.
 async fn authorize_blob_write(
     state: &AppState,
     headers: &HeaderMap,
     code: &str,
-) -> Result<(), Response> {
+) -> Result<(), Box<Response>> {
     let store = state.store.clone();
     let code = code.to_string();
     let meta = tokio::task::spawn_blocking(move || store.stats(&code, now_ms_i64())).await;
@@ -639,16 +640,19 @@ async fn authorize_blob_write(
                 Ok(())
             } else {
                 state.metrics.rejected(RejectReason::Unauthorized);
-                Err(err(StatusCode::UNAUTHORIZED, "unauthorized"))
+                Err(Box::new(err(StatusCode::UNAUTHORIZED, "unauthorized")))
             }
         }
         Ok(Ok(None)) => {
             state.metrics.rejected(RejectReason::NotFound);
-            Err(err(StatusCode::NOT_FOUND, "not found"))
+            Err(Box::new(err(StatusCode::NOT_FOUND, "not found")))
         }
         other => {
             tracing::error!(target: "share", ?other, "store.stats before blob write failed");
-            Err(err(StatusCode::INTERNAL_SERVER_ERROR, "internal error"))
+            Err(Box::new(err(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "internal error",
+            )))
         }
     }
 }
@@ -678,7 +682,7 @@ pub async fn put_blob_chunk(
         return err(StatusCode::BAD_REQUEST, "chunk too small");
     }
     if let Err(response) = authorize_blob_write(&state, &headers, &code).await {
-        return response;
+        return *response;
     }
     let store = state.store.clone();
     let stored = tokio::task::spawn_blocking(move || {
@@ -745,7 +749,7 @@ pub async fn commit_blob(
         );
     };
     if let Err(response) = authorize_blob_write(&state, &headers, &code).await {
-        return response;
+        return *response;
     }
     let store = state.store.clone();
     let committed = tokio::task::spawn_blocking(move || {
