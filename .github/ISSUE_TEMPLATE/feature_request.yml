@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose a change to a service or a shared contract
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      multiple: true
+      options:
+        - signaling-server
+        - share-server
+        - status-server
+        - identity-server
+        - sync-server
+        - update-server
+        - diagnostic-server
+        - logto-email
+        - packages/sync-protocol
+        - packages/status-contract
+        - CI or repository tooling
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and what stops you today
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The change you have in mind. Say if it changes a wire contract the app consumes (docs/contracts.md).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

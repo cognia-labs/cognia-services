@@ -1,0 +1,14 @@
+# Every pull request requests review from the maintainers.
+* @MaxQian888
+
+# Wire contracts the app consumes at a pinned commit (docs/contracts.md).
+/packages/ @MaxQian888
+/services/signaling-server/core/ @MaxQian888
+/services/share-server/fixtures/ @MaxQian888
+/services/share-server/share-constants.json @MaxQian888
+/services/diagnostic-server/openapi.yaml @MaxQian888
+/services/diagnostic-server/migrations/ @MaxQian888
+
+# Deployment and publishing.
+/.github/workflows/deploy.yml @MaxQian888
+/.github/workflows/images.yml @MaxQian888

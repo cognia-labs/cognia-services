@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/cognia-labs/cognia-services/security/advisories/new
+    about: Report vulnerabilities privately, never in a public issue
+  - name: App bug or feature (desktop, mobile, web)
+    url: https://github.com/MaxQian888/cognia-next/issues
+    about: Issues with the Cognia app itself belong in cognia-next
+  - name: Service documentation
+    url: https://github.com/cognia-labs/cognia-services/blob/main/docs/README.md
+    about: Per-service guides, contracts, runbooks and releases

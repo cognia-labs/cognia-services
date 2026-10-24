@@ -1,0 +1,45 @@
+name: Repository
+
+# ============================================================================
+# Repository-wide checks that no single service lane owns:
+#   - the tooling under scripts/ (each.mjs, check-docs.mjs) and its tests;
+#   - every relative Markdown link resolves, and the README lists every unit;
+#   - Prettier formatting across the tree (.prettierrc, .prettierignore).
+# Each service's own build and tests stay in its own workflow.
+# ============================================================================
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: repo-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Tooling, docs and formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Tooling tests
+        run: node --test scripts/*.test.mjs
+
+      - name: Markdown links and README coverage
+        run: node scripts/check-docs.mjs
+
+      - name: Formatting
+        run: npx --yes prettier@3.9.9 --check .

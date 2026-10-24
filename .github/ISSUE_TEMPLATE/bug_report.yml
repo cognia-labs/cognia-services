@@ -1,0 +1,62 @@
+name: Bug report
+description: A service misbehaves, fails to build, or its docs are wrong
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: service
+    attributes:
+      label: Service
+      options:
+        - signaling-server
+        - share-server
+        - status-server
+        - identity-server
+        - sync-server
+        - update-server
+        - diagnostic-server
+        - logto-email
+        - packages/sync-protocol
+        - packages/status-contract
+        - CI or repository tooling
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Where does it run?
+      options:
+        - Official hosted service (cognia.cn)
+        - Self-hosted with the app's compose files
+        - Self-hosted Worker on my own Cloudflare account
+        - Local development
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Image tag, commit SHA, or the build SHA a Worker's health endpoint reports
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, what happened instead, and any status code or error body
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log lines. Remove tokens, secrets and personal data first.
+      render: text

@@ -1,0 +1,21 @@
+{
+  "name": "cognia-services",
+  "private": true,
+  "description": "Repository tooling only. Every service and package is its own pnpm root or Cargo workspace; see CONTRIBUTING.md.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=26.12.1"
+  },
+  "scripts": {
+    "units": "node scripts/each.mjs --list",
+    "install:all": "node scripts/each.mjs install",
+    "typecheck": "node scripts/each.mjs typecheck",
+    "lint": "node scripts/each.mjs lint",
+    "test": "node scripts/each.mjs test",
+    "build": "node scripts/each.mjs build",
+    "check:docs": "node scripts/check-docs.mjs",
+    "test:repo": "node --test scripts/*.test.mjs"
+  }
+}
