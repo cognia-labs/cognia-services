@@ -3,7 +3,10 @@ use serde::Serialize;
 use sqlx::{FromRow, PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
+use std::sync::Arc;
+
 use crate::{
+    alert::AlertPolicy,
     model::{IncidentState, ProcessingState},
     processing::{retry_delay, ProcessingFailure},
     retention::RetentionPolicy,
@@ -12,6 +15,28 @@ use crate::{
 #[derive(Clone)]
 pub struct DiagnosticRepository {
     pool: PgPool,
+    alerts: Arc<AlertPolicy>,
+}
+
+/// What an alert is about. `incident` and `group` are optional because a
+/// backlog or a storage outage belongs to a project, not to one crash.
+#[derive(Debug, Clone, Copy)]
+struct AlertScope {
+    tenant_id: Uuid,
+    project_id: Uuid,
+    incident_id: Option<Uuid>,
+    group_id: Option<Uuid>,
+}
+
+impl AlertScope {
+    fn incident(incident: &IncidentRecord, group_id: Option<Uuid>) -> Self {
+        Self {
+            tenant_id: incident.tenant_id,
+            project_id: incident.project_id,
+            incident_id: Some(incident.id),
+            group_id,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -284,7 +309,16 @@ pub struct AlertDeliveryRecord {
 
 impl DiagnosticRepository {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+            alerts: Arc::new(AlertPolicy::default()),
+        }
+    }
+
+    /// The transports and thresholds every enqueued alert follows.
+    pub fn with_alert_policy(mut self, policy: AlertPolicy) -> Self {
+        self.alerts = Arc::new(policy);
+        self
     }
 
     pub async fn health(&self) -> anyhow::Result<()> {
@@ -1072,26 +1106,30 @@ impl DiagnosticRepository {
         .bind(group_id)
         .execute(&mut *tx)
         .await?;
+        let scope = AlertScope::incident(incident, Some(group_id));
         if notify_regression {
             enqueue_alert(
                 &mut tx,
-                incident,
-                group_id,
+                &self.alerts,
+                scope,
                 "new_regression",
                 serde_json::json!({"fingerprint": accepted.fingerprint}),
+                Dedupe::Never,
             )
             .await?;
         }
         if !accepted.missing_symbols.is_empty() {
             enqueue_alert(
                 &mut tx,
-                incident,
-                group_id,
+                &self.alerts,
+                scope,
                 "missing_symbols",
                 serde_json::json!({"modules": accepted.missing_symbols}),
+                Dedupe::Never,
             )
             .await?;
         }
+        raise_crash_spike(&mut tx, &self.alerts, scope, &accepted.fingerprint).await?;
         schedule_incident_retention(&mut tx, incident.tenant_id, incident.id, false).await?;
         audit(
             &mut tx,
@@ -1134,13 +1172,127 @@ impl DiagnosticRepository {
             Some(serde_json::json!({"code": failure.code(), "retryable": next_delay.is_some()})),
         )
         .await?;
+        if failure == ProcessingFailure::StorageUnavailable {
+            enqueue_alert(
+                &mut tx,
+                &self.alerts,
+                AlertScope::incident(incident, None),
+                "storage_failure",
+                serde_json::json!({"stage": "processing", "code": failure.code()}),
+                Dedupe::Window,
+            )
+            .await?;
+        }
         tx.commit().await?;
         Ok(())
     }
 
+    /// An upload the API refused (checksum, privacy, size): raise
+    /// `upload_failure`, at most once per project per dedupe window.
+    pub async fn record_upload_failure(
+        &self,
+        incident: &IncidentRecord,
+        code: &str,
+    ) -> anyhow::Result<bool> {
+        let mut tx = self.tenant_transaction(incident.tenant_id).await?;
+        let raised = enqueue_alert(
+            &mut tx,
+            &self.alerts,
+            AlertScope::incident(incident, None),
+            "upload_failure",
+            serde_json::json!({"code": code}),
+            Dedupe::Window,
+        )
+        .await?;
+        tx.commit().await?;
+        Ok(raised)
+    }
+
+    /// The object store refused an intake write: raise `storage_failure`, at
+    /// most once per project per dedupe window.
+    pub async fn record_storage_failure(
+        &self,
+        incident: &IncidentRecord,
+        stage: &str,
+    ) -> anyhow::Result<bool> {
+        let mut tx = self.tenant_transaction(incident.tenant_id).await?;
+        let raised = enqueue_alert(
+            &mut tx,
+            &self.alerts,
+            AlertScope::incident(incident, None),
+            "storage_failure",
+            serde_json::json!({"stage": stage}),
+            Dedupe::Window,
+        )
+        .await?;
+        tx.commit().await?;
+        Ok(raised)
+    }
+
+    /// Raise `processing_backlog` for every project of the tenant whose queue
+    /// is too long or too old. Returns the projects alerted.
+    pub async fn raise_processing_backlog(&self, tenant_id: Uuid) -> anyhow::Result<Vec<Uuid>> {
+        let mut tx = self.tenant_transaction(tenant_id).await?;
+        let queues = sqlx::query_as::<_, (Uuid, i64, f64)>(
+            // Queued means "the processor owes this incident work": uploaded
+            // (`client_state = 'processing'`) and not finished. The age is
+            // measured from `next_processing_at`, so an incident waiting out a
+            // retry backoff is not late, while one claimed and never finished
+            // (stuck in scanning) keeps its original due time and is.
+            r#"SELECT project_id, count(*),
+                greatest(extract(epoch FROM now() - min(next_processing_at)), 0)::float8
+            FROM incidents
+            WHERE client_state = 'processing'
+                AND processing_state IN (
+                    'received', 'retryable_failure', 'scanning', 'symbolicating', 'grouping'
+                )
+                AND consent_withdrawn_at IS NULL
+            GROUP BY project_id"#,
+        )
+        .fetch_all(&mut *tx)
+        .await?;
+        let mut alerted = Vec::new();
+        for (project_id, queued, oldest_seconds) in queues {
+            let oldest = std::time::Duration::from_secs_f64(oldest_seconds.max(0.0));
+            if !self.alerts.backlog.is_backlog(queued, oldest) {
+                continue;
+            }
+            let raised = enqueue_alert(
+                &mut tx,
+                &self.alerts,
+                AlertScope {
+                    tenant_id,
+                    project_id,
+                    incident_id: None,
+                    group_id: None,
+                },
+                "processing_backlog",
+                serde_json::json!({
+                    "queuedIncidents": queued,
+                    "oldestQueuedSeconds": oldest.as_secs(),
+                    "maxIncidents": self.alerts.backlog.max_incidents,
+                    "maxAgeSeconds": self.alerts.backlog.max_age.as_secs(),
+                }),
+                Dedupe::Window,
+            )
+            .await?;
+            if raised {
+                alerted.push(project_id);
+            }
+        }
+        tx.commit().await?;
+        Ok(alerted)
+    }
+
     pub async fn cancel(&self, tenant_id: Uuid, incident_id: Uuid) -> anyhow::Result<()> {
-        self.set_terminal(tenant_id, incident_id, "cancelled", "incident.cancelled")
-            .await
+        self.set_terminal(
+            tenant_id,
+            incident_id,
+            "cancelled",
+            "incident.cancelled",
+            None,
+        )
+        .await
     }
 
     pub async fn withdraw(&self, tenant_id: Uuid, incident_id: Uuid) -> anyhow::Result<()> {
@@ -1158,8 +1310,56 @@ impl DiagnosticRepository {
     }
 
     pub async fn delete(&self, tenant_id: Uuid, incident_id: Uuid) -> anyhow::Result<()> {
-        self.set_terminal(tenant_id, incident_id, "deleted", "incident.deleted")
+        self.set_terminal(tenant_id, incident_id, "deleted", "incident.deleted", None)
             .await
+    }
+
+    /// The incident a deletion credential was issued for, or `None`.
+    ///
+    /// Matches on the stored hash only; a wrong credential, a wrong project or
+    /// an unknown incident all look the same to the caller.
+    pub async fn incident_for_deletion_credential(
+        &self,
+        tenant_id: Uuid,
+        project_id: Uuid,
+        incident_id: Uuid,
+        credential_hash: &str,
+    ) -> anyhow::Result<Option<IncidentRecord>> {
+        let mut tx = self.tenant_transaction(tenant_id).await?;
+        let record = sqlx::query_as::<_, IncidentRecord>(
+            r#"SELECT id, tenant_id, project_id, installation_id, artifact_hash, build_id,
+                platform, module, exception, client_state, processing_state, support_code,
+                fingerprint, processing_attempts, next_processing_at, failure_code,
+                grouping_basis, raw_stack, symbolized_stack, missing_symbols, group_id,
+                accepted_at, consent_withdrawn_at, created_at, updated_at
+            FROM incidents
+            WHERE id = $1 AND project_id = $2 AND deletion_credential_hash = $3"#,
+        )
+        .bind(incident_id)
+        .bind(project_id)
+        .bind(credential_hash)
+        .fetch_optional(&mut *tx)
+        .await?;
+        tx.commit().await?;
+        Ok(record)
+    }
+
+    /// Deletion authorized by the incident's one-time deletion credential
+    /// rather than by the uploading installation's grant. The audit event
+    /// says which.
+    pub async fn delete_with_credential(
+        &self,
+        tenant_id: Uuid,
+        incident_id: Uuid,
+    ) -> anyhow::Result<()> {
+        self.set_terminal(
+            tenant_id,
+            incident_id,
+            "deleted",
+            "incident.deleted",
+            Some(serde_json::json!({"authorizedBy": "deletion_credential"})),
+        )
+        .await
     }
 
     async fn set_terminal(
@@ -1168,6 +1368,7 @@ impl DiagnosticRepository {
         incident_id: Uuid,
         state: &str,
         action: &str,
+        details: Option<serde_json::Value>,
     ) -> anyhow::Result<()> {
         let mut tx = self.tenant_transaction(tenant_id).await?;
         sqlx::query(
@@ -1180,7 +1381,7 @@ impl DiagnosticRepository {
         if matches!(state, "cancelled" | "deleted") {
             schedule_incident_retention(&mut tx, tenant_id, incident_id, true).await?;
         }
-        audit(&mut tx, tenant_id, action, incident_id, None).await?;
+        audit(&mut tx, tenant_id, action, incident_id, details).await?;
         tx.commit().await?;
         Ok(())
     }
@@ -1508,30 +1709,121 @@ fn processing_failure_target(retryable: bool) -> (ProcessingState, IncidentState
     }
 }
 
+/// Whether an alert kind fires on every event or once per window.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Dedupe {
+    /// Every event is its own alert (a regression, an incident missing
+    /// symbols).
+    Never,
+    /// One alert per (project, kind, group) per `AlertPolicy::dedupe_window`:
+    /// a spike, an outage or a backlog is one situation, not one per event.
+    Window,
+}
+
+/// Queue one delivery per configured transport. Returns whether it did.
+///
+/// Windowed kinds take a transaction-scoped advisory lock on their dedupe key
+/// first, so two workers noticing the same outage at once still raise one
+/// alert.
 async fn enqueue_alert(
     tx: &mut Transaction<'_, Postgres>,
-    incident: &IncidentRecord,
-    group_id: Uuid,
+    policy: &AlertPolicy,
+    scope: AlertScope,
     alert_kind: &str,
     payload: serde_json::Value,
-) -> anyhow::Result<()> {
-    for transport in ["webhook", "smtp", "otel"] {
+    dedupe: Dedupe,
+) -> anyhow::Result<bool> {
+    if dedupe == Dedupe::Window {
+        let key = format!(
+            "alert:{}:{}:{alert_kind}:{}",
+            scope.tenant_id,
+            scope.project_id,
+            scope
+                .group_id
+                .map_or_else(String::new, |group| group.to_string())
+        );
+        sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+            .bind(key)
+            .execute(&mut **tx)
+            .await?;
+        let recent = sqlx::query_scalar::<_, bool>(
+            r#"SELECT EXISTS (
+                SELECT 1 FROM alert_deliveries
+                WHERE project_id = $1 AND alert_kind = $2
+                    AND group_id IS NOT DISTINCT FROM $3
+                    AND created_at > now() - ($4 * interval '1 second')
+            )"#,
+        )
+        .bind(scope.project_id)
+        .bind(alert_kind)
+        .bind(scope.group_id)
+        .bind(policy.dedupe_window.as_secs_f64())
+        .fetch_one(&mut **tx)
+        .await?;
+        if recent {
+            return Ok(false);
+        }
+    }
+    for transport in &policy.transports {
         sqlx::query(
             r#"INSERT INTO alert_deliveries (
                 tenant_id, project_id, incident_id, group_id, alert_kind, transport, payload
             ) VALUES ($1,$2,$3,$4,$5,$6,$7)"#,
         )
-        .bind(incident.tenant_id)
-        .bind(incident.project_id)
-        .bind(incident.id)
-        .bind(group_id)
+        .bind(scope.tenant_id)
+        .bind(scope.project_id)
+        .bind(scope.incident_id)
+        .bind(scope.group_id)
         .bind(alert_kind)
-        .bind(transport)
+        .bind(*transport)
         .bind(&payload)
         .execute(&mut **tx)
         .await?;
     }
-    Ok(())
+    Ok(!policy.transports.is_empty())
+}
+
+/// Raise `crash_spike` when the group just accepted an incident that puts its
+/// trailing window over the spike rule. Runs inside `accept_processing`, so
+/// the incident being accepted is already counted.
+async fn raise_crash_spike(
+    tx: &mut Transaction<'_, Postgres>,
+    policy: &AlertPolicy,
+    scope: AlertScope,
+    fingerprint: &str,
+) -> anyhow::Result<bool> {
+    let rule = policy.spike;
+    let (current, baseline) = sqlx::query_as::<_, (i64, i64)>(
+        r#"SELECT
+            count(*) FILTER (WHERE accepted_at > now() - ($3 * interval '1 second')),
+            count(*) FILTER (WHERE accepted_at <= now() - ($3 * interval '1 second'))
+        FROM incidents
+        WHERE project_id = $1 AND group_id = $2
+            AND accepted_at > now() - ($3 * ($4 + 1) * interval '1 second')"#,
+    )
+    .bind(scope.project_id)
+    .bind(scope.group_id)
+    .bind(rule.window.as_secs_f64())
+    .bind(f64::from(rule.baseline_windows))
+    .fetch_one(&mut **tx)
+    .await?;
+    if !rule.is_spike(current, baseline) {
+        return Ok(false);
+    }
+    enqueue_alert(
+        tx,
+        policy,
+        scope,
+        "crash_spike",
+        serde_json::json!({
+            "fingerprint": fingerprint,
+            "incidentsInWindow": current,
+            "baselinePerWindow": baseline as f64 / f64::from(rule.baseline_windows.max(1)),
+            "windowSeconds": rule.window.as_secs(),
+        }),
+        Dedupe::Window,
+    )
+    .await
 }
 
 async fn tenant_retention_policy(

@@ -17,7 +17,7 @@ pub use model::{
     ProcessingState,
 };
 
-pub use alert::{AlertDispatcher, AlertWorker};
+pub use alert::{AlertDispatcher, AlertPolicy, AlertWorker, BacklogRule, SpikeRule};
 pub use api::{build_router, AppState};
 pub use auth::{GrantClaims, GrantRole, GrantSigner};
 pub use config::ServerConfig;

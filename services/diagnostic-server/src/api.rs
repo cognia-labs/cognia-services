@@ -145,6 +145,10 @@ pub fn build_router(state: AppState) -> Router {
             "/v1/incidents/{incident_id}/withdraw",
             post(withdraw_consent),
         )
+        .route(
+            "/v1/incidents/{incident_id}/delete-with-credential",
+            post(delete_incident_with_credential),
+        )
         .route("/v1/incidents/{incident_id}/audit", get(incident_audit))
         // The console's own view of stored artifacts. Separate from
         // `/parts` — that one is the uploader's resume inventory and rides the
@@ -445,14 +449,14 @@ async fn upload_part(
     body: Bytes,
 ) -> ApiResult<(StatusCode, Json<UploadPartRecord>)> {
     let claims = authorize(&state, &headers, GrantRole::Uploader)?;
-    owned_incident(&state, &claims, incident_id).await?;
+    let incident = owned_incident(&state, &claims, incident_id).await?;
     if !(1..=10_000).contains(&part_number) {
         return Err(ApiError::bad_request("invalid_part_number"));
     }
     let source_sha256 = required_header(&headers, "x-part-sha256")?;
     validate_hex_sha256(source_sha256)?;
     if sha256_hex(&body) != source_sha256 {
-        return Err(ApiError::unprocessable("part_checksum_mismatch"));
+        return Err(upload_refused(&state, &incident, "part_checksum_mismatch").await);
     }
     let artifact_kind = headers
         .get("x-artifact-kind")
@@ -465,24 +469,33 @@ async fn upload_part(
         MAX_ATTACHMENT_BYTES
     };
     if body.len() as u64 > limit {
-        return Err(ApiError::payload_too_large("part_too_large"));
+        return Err(upload_refused(&state, &incident, "part_too_large").await);
     }
     let scan = state.privacy.scan(&body);
     if let Some(kind) = scan.rejected_credential_kind {
-        return Err(ApiError::unprocessable(&format!(
-            "credential_detected:{kind}"
-        )));
+        return Err(
+            upload_refused(&state, &incident, &format!("credential_detected:{kind}")).await,
+        );
     }
     let stored_sha256 = sha256_hex(&scan.sanitized);
     let object_key = format!(
         "tenants/{}/projects/{}/incidents/{incident_id}/parts/{part_number:05}",
         claims.tenant_id, claims.project_id
     );
-    state
+    if let Err(error) = state
         .artifacts
         .put_part(claims.tenant_id, &object_key, scan.sanitized.clone())
         .await
-        .map_err(ApiError::internal)?;
+    {
+        if let Err(alert_error) = state
+            .repository
+            .record_storage_failure(&incident, "upload")
+            .await
+        {
+            tracing::error!(error = %alert_error, "failed to raise the storage_failure alert");
+        }
+        return Err(ApiError::internal(error));
+    }
     let record = UploadPartRecord {
         incident_id,
         part_number,
@@ -520,18 +533,18 @@ async fn complete_upload(
     _request: Option<Json<CompleteUploadRequest>>,
 ) -> ApiResult<Json<IncidentRecord>> {
     let claims = authorize(&state, &headers, GrantRole::Uploader)?;
-    owned_incident(&state, &claims, incident_id).await?;
+    let incident = owned_incident(&state, &claims, incident_id).await?;
     let parts = state
         .repository
         .parts(claims.tenant_id, incident_id)
         .await
         .map_err(ApiError::internal)?;
     if parts.is_empty() {
-        return Err(ApiError::conflict("upload_has_no_parts"));
+        return Err(upload_refused(&state, &incident, "upload_has_no_parts").await);
     }
     let total_bytes: u64 = parts.iter().map(|part| part.stored_bytes as u64).sum();
     if total_bytes > MAX_INCIDENT_BYTES {
-        return Err(ApiError::payload_too_large("incident_too_large"));
+        return Err(upload_refused(&state, &incident, "incident_too_large").await);
     }
     let incident = state
         .repository
@@ -587,6 +600,74 @@ async fn delete_incident(
         .await
         .map_err(ApiError::internal)?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CredentialDeletionRequest {
+    tenant_id: Uuid,
+    project_id: Uuid,
+    deletion_credential: String,
+}
+
+/// Delete an incident with the one-time credential `POST /v1/incidents`
+/// returned, without a grant.
+///
+/// The grant route only reaches incidents the *same installation* uploaded,
+/// so a reinstall, a lost installation key or a moved machine used to strand
+/// every earlier submission; the credential was minted and stored for exactly
+/// this and never checked. Any mismatch — wrong credential, project, tenant
+/// or incident — answers the same 404, so the route confirms nothing about
+/// incidents the caller cannot delete. Mounted regardless of the intake
+/// switch, like the other deletion routes.
+async fn delete_incident_with_credential(
+    State(state): State<AppState>,
+    Path(incident_id): Path<Uuid>,
+    Json(request): Json<CredentialDeletionRequest>,
+) -> ApiResult<StatusCode> {
+    if !is_deletion_credential(&request.deletion_credential) {
+        return Err(ApiError::bad_request("invalid_deletion_credential"));
+    }
+    let incident = state
+        .repository
+        .incident_for_deletion_credential(
+            request.tenant_id,
+            request.project_id,
+            incident_id,
+            &sha256_hex(request.deletion_credential.as_bytes()),
+        )
+        .await
+        .map_err(ApiError::internal)?
+        .ok_or_else(|| ApiError::not_found("incident_not_found"))?;
+    delete_artifacts(&state, incident.tenant_id, incident.id).await?;
+    state
+        .repository
+        .delete_with_credential(incident.tenant_id, incident.id)
+        .await
+        .map_err(ApiError::internal)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// The shape `create_incident` mints: `del_` and a simple (32 hex) UUID.
+fn is_deletion_credential(value: &str) -> bool {
+    value
+        .strip_prefix("del_")
+        .is_some_and(|rest| rest.len() == 32 && rest.bytes().all(|byte| byte.is_ascii_hexdigit()))
+}
+
+/// The client error for a refused upload, after raising `upload_failure`.
+///
+/// The alert is best effort: failing to queue it must not change what the
+/// uploader is told.
+async fn upload_refused(state: &AppState, incident: &IncidentRecord, code: &str) -> ApiError {
+    if let Err(error) = state.repository.record_upload_failure(incident, code).await {
+        tracing::error!(error = %error, code, "failed to raise the upload_failure alert");
+    }
+    match code {
+        "part_too_large" | "incident_too_large" => ApiError::payload_too_large(code),
+        "upload_has_no_parts" => ApiError::conflict(code),
+        _ => ApiError::unprocessable(code),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1298,6 +1379,26 @@ mod tests {
             .await,
             StatusCode::BAD_REQUEST
         );
+        // Deleting by credential needs no grant and no intake: a malformed
+        // credential is refused on its shape (400) before any lookup.
+        assert_eq!(
+            status_of(
+                &router,
+                Request::post(format!(
+                    "/v1/incidents/{}/delete-with-credential",
+                    Uuid::new_v4()
+                ))
+                .header("content-type", "application/json")
+                .body(Body::from(format!(
+                    r#"{{"tenantId":"{}","projectId":"{}","deletionCredential":"guess"}}"#,
+                    Uuid::new_v4(),
+                    Uuid::new_v4()
+                )))
+                .unwrap()
+            )
+            .await,
+            StatusCode::BAD_REQUEST
+        );
     }
 
     #[tokio::test]
@@ -1394,6 +1495,7 @@ mod tests {
             "downloadIncidentArtifact",
             "readIncidentAudit",
             "updateTenantPolicy",
+            "deleteIncidentWithCredential",
         ] {
             assert!(
                 contract.contains(operation),
@@ -1485,6 +1587,16 @@ mod tests {
             assigned.assigned_to,
             Some(Some("ops@example.com".to_owned()))
         );
+    }
+
+    #[test]
+    fn only_minted_deletion_credentials_are_accepted() {
+        let minted = format!("del_{}", Uuid::new_v4().simple());
+        assert!(is_deletion_credential(&minted));
+        assert!(!is_deletion_credential("del_"));
+        assert!(!is_deletion_credential(&minted.replace("del_", "tok_")));
+        assert!(!is_deletion_credential(&format!("{minted}0")));
+        assert!(!is_deletion_credential(&format!("del_{}", "z".repeat(32))));
     }
 
     #[test]

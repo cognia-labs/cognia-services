@@ -6,6 +6,22 @@ Workers deploy on their own; the app pins commits, not versions. See
 
 ## Unreleased
 
+- diagnostic-server: `POST /v1/incidents/{id}/delete-with-credential` deletes an
+  incident with its one-time deletion credential and no grant. The credential
+  was minted and stored before but never checked, so a reinstall or a lost
+  installation key stranded earlier submissions.
+- diagnostic-server: the `crash_spike`, `upload_failure`, `storage_failure` and
+  `processing_backlog` alerts are raised (they existed in the schema only), at
+  most once per project or group per window. New settings:
+  `ALERT_DEDUPE_WINDOW_SECONDS`, `ALERT_SPIKE_*`, `ALERT_BACKLOG_*`.
+- diagnostic-server: alerts are queued only on configured transports (webhook,
+  SMTP, OTel) instead of all three, which left a permanently failed delivery
+  per alert for every unconfigured one. A partial SMTP setup now refuses to
+  start. Migration `0007_alert_windows.sql` adds two indexes.
+- diagnostic-server: clippy runs in CI (the unused `clap` dependency and two
+  deprecated nonce calls are gone), and the repository's SQL is tested against
+  PostgreSQL.
+
 ## 0.1.0 — 2026-10-24
 
 First release after the services moved out of

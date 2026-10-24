@@ -53,12 +53,25 @@ src/alert.rs       alert delivery worker (webhook, SMTP, OTel log signal)
 - **Retention.** Accepted incidents get retention jobs. Defaults: minidumps 14
   days, attachments 30, metadata 90, symbols 180. Tenants can override them
   (`retentionOverrides`, at most 3650 days). Failed jobs retry with backoff.
-- **Alerts.** A regression in a resolved group (`new_regression`) and missing
-  symbols (`missing_symbols`) enqueue one delivery per transport: webhook,
-  SMTP, and an OTel log signal. Webhooks carry an `idempotency-key` header and,
-  with `ALERT_WEBHOOK_SECRET` set, an `x-cognia-signature: sha256=…` HMAC. A
-  transport that is not configured fails permanently; others retry up to 10
-  times.
+- **Alerts.** Six kinds, each queued once per configured transport: the
+  webhook (when `ALERT_WEBHOOK_URL` is set), SMTP (when all three
+  `ALERT_SMTP_*` variables are set; a partial setup refuses to start) and an
+  OTel log signal (always). Failed deliveries retry up to 10 times.
+
+  | Kind                 | Raised when                                                                                                                      | Once per                  |
+  | -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+  | `new_regression`     | an incident lands in a new group, or reopens a resolved one                                                                      | event                     |
+  | `missing_symbols`    | an accepted incident names modules with no symbols                                                                               | event                     |
+  | `crash_spike`        | a group accepts at least `ALERT_SPIKE_MIN_INCIDENTS` in the spike window and `ALERT_SPIKE_FACTOR` times its baseline average     | group per dedupe window   |
+  | `upload_failure`     | the API refuses an upload: checksum mismatch, a detected credential, a part or incident over the limit, completing with no parts | project per dedupe window |
+  | `storage_failure`    | the object store refuses an intake write, or processing cannot read an artifact                                                  | project per dedupe window |
+  | `processing_backlog` | a project has `ALERT_BACKLOG_MAX_INCIDENTS` uploaded incidents waiting, or one overdue by `ALERT_BACKLOG_MAX_AGE_SECONDS`        | project per dedupe window |
+
+  The backlog is checked by the alert worker, not the processor, so it still
+  fires when processing is stalled or switched off. Webhooks carry an
+  `idempotency-key` header and, with `ALERT_WEBHOOK_SECRET` set, an
+  `x-cognia-signature: sha256=…` HMAC.
+
 - **Triage.** The console surface: list and filter groups and incidents, set a
   group's status (`open`, `suppressed`, `resolved`), read the audit trail, and
   download raw artifacts. Triage edits and artifact reads are audited with the
@@ -77,6 +90,7 @@ The contract is [`openapi.yaml`](openapi.yaml). The server also serves it at
 | Grant exchange | `POST /v1/grants/oidc`, `POST /v1/grants/anonymous`                                                                                                                                 | none                             |
 | Intake         | `POST /v1/incidents`, `GET /v1/incidents/{id}/parts`, `PUT /v1/incidents/{id}/parts/{part}`, `POST /v1/incidents/{id}/complete`, `POST /v1/incidents/{id}/cancel`                   | uploader                         |
 | Incident       | `GET` / `DELETE /v1/incidents/{id}`, `POST /v1/incidents/{id}/withdraw`                                                                                                             | uploader (own installation)      |
+| Credential     | `POST /v1/incidents/{id}/delete-with-credential`                                                                                                                                    | none (the deletion credential)   |
 | Triage         | `GET /v1/incidents`, `GET /v1/incidents/{id}/audit`, `GET /v1/incidents/{id}/artifacts`, `GET /v1/incidents/{id}/artifacts/{part}`, `GET /v1/groups`, `GET`/`PATCH /v1/groups/{id}` | viewer; triager to edit/download |
 | Admin          | `GET`/`PATCH /v1/admin/tenant`, `GET /v1/admin/symbols`, `PUT /v1/admin/symbols/{buildId}/{platform}`, `POST`/`DELETE /v1/admin/tenant-key`                                         | admin                            |
 
@@ -88,9 +102,18 @@ with a single-use nonce and a timestamp within 5 minutes, and always yields an
 `uploader` grant. Crypto-shred (`DELETE /v1/admin/tenant-key`) also requires an
 `x-confirm-crypto-shred` header equal to the tenant id.
 
+**Deletion credential.** `POST /v1/incidents` returns a one-time
+`deletionCredential` (`del_` and 32 hex digits) when it creates an incident and
+stores only its SHA-256. `POST /v1/incidents/{id}/delete-with-credential` with
+`{tenantId, projectId, deletionCredential}` deletes the incident and its
+artifacts without a grant, so a submission can still be deleted after a
+reinstall or a lost installation key, when the installation grant no longer
+reaches it. Any mismatch answers the same `404 incident_not_found`; the audit
+event records `authorizedBy: deletion_credential`.
+
 **Intake kill switch.** With `DIAGNOSTIC_INGEST_ENABLED=false` every intake
 route answers `503 ingest_disabled`. Grant exchange, incident read, withdraw,
-delete, triage and admin stay mounted, so deletion requests can still be
+delete (by grant or by credential), triage and admin stay mounted, so deletion requests can still be
 served.
 
 **API changes land here first.** cognia-next keeps a byte-identical copy of
@@ -144,7 +167,14 @@ subcommands.
 | `ALERT_WEBHOOK_URL`                  | unset                                           | Webhook target                                                              |
 | `ALERT_WEBHOOK_SECRET`               | unset                                           | HMAC secret for `x-cognia-signature`                                        |
 | `ALERT_SMTP_URL`                     | unset                                           | SMTP transport URL                                                          |
-| `ALERT_SMTP_FROM` / `ALERT_SMTP_TO`  | unset                                           | Sender and recipient for SMTP alerts                                        |
+| `ALERT_SMTP_FROM` / `ALERT_SMTP_TO`  | unset                                           | Sender and recipient for SMTP alerts; set all three SMTP variables or none  |
+| `ALERT_DEDUPE_WINDOW_SECONDS`        | `3600`                                          | Window for the once-per-window kinds                                        |
+| `ALERT_SPIKE_WINDOW_SECONDS`         | `3600`                                          | Trailing window a crash spike is counted over                               |
+| `ALERT_SPIKE_BASELINE_WINDOWS`       | `24`                                            | Earlier windows that form the baseline, 1 to 720                            |
+| `ALERT_SPIKE_MIN_INCIDENTS`          | `10`                                            | Floor for a spike                                                           |
+| `ALERT_SPIKE_FACTOR`                 | `3`                                             | Multiple of the baseline average (at least 1)                               |
+| `ALERT_BACKLOG_MAX_INCIDENTS`        | `100`                                           | Waiting incidents per project that count as a backlog                       |
+| `ALERT_BACKLOG_MAX_AGE_SECONDS`      | `900`                                           | How overdue the oldest waiting incident may be                              |
 | `RUST_LOG`                           | `cognia_diagnostic_server=info,tower_http=info` | Log filter. Logs are JSON                                                   |
 
 Booleans accept `1`/`true`/`yes`/`on` and `0`/`false`/`no`/`off`. Anything else
@@ -173,7 +203,16 @@ cd services/diagnostic-server
 cargo test --locked
 ```
 
-The unit tests need no Postgres, object store or KMS.
+The unit tests need no Postgres, object store or KMS. The repository's SQL is
+covered by `tests/postgres.rs`, ignored by default; run it against any
+PostgreSQL role that may create databases:
+
+```bash
+docker run -d --rm --name diag-pg -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:17-alpine
+DATABASE_URL=postgres://postgres:postgres@127.0.0.1:55432/postgres \
+  cargo test --locked --test postgres -- --ignored
+docker stop diag-pg
+```
 
 To run the full stack (Postgres, MinIO built from pinned sources, and a
 LocalStack-compatible KMS stub), use the compose project in `deploy/`:
@@ -235,7 +274,10 @@ on a role with no DDL grant.
 `.github/workflows/diagnostic-server.yml` runs on changes to this directory, to
 `rust-toolchain.toml`, or to the workflow itself:
 
-- **Rust tests:** `cargo test --locked`.
+- **Rust tests:** `cargo fmt --check`, `cargo clippy --all-targets -D warnings`,
+  `cargo test --locked`.
+- **Rust tests against PostgreSQL:** `tests/postgres.rs` with
+  `-- --ignored` against a `postgres:17-alpine` service container.
 - **Diagnostics stack:** `node --test deploy/minio-pin.test.mjs` (MinIO is
   built from pinned official sources), then the compose bring-up above. It
   checks that `migrate` and `seed` exited 0, that the development tenant's

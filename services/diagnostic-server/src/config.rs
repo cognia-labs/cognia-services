@@ -42,6 +42,22 @@ pub struct ServerConfig {
     pub alert_smtp_url: Option<String>,
     pub alert_smtp_from: Option<String>,
     pub alert_smtp_to: Option<String>,
+    /// One alert per (project, kind, group) per window for the kinds that
+    /// would otherwise fire on every event: crash spikes, upload and storage
+    /// failures, processing backlog.
+    pub alert_dedupe_window: Duration,
+    /// Trailing window a crash spike is measured over.
+    pub alert_spike_window: Duration,
+    /// How many earlier windows of the same length form the baseline.
+    pub alert_spike_baseline_windows: u32,
+    /// A group needs at least this many accepted incidents in the window.
+    pub alert_spike_min_incidents: u32,
+    /// …and at least this multiple of its average per baseline window.
+    pub alert_spike_factor: f64,
+    /// Queued incidents per project that count as a backlog.
+    pub alert_backlog_max_incidents: u32,
+    /// Age of the oldest queued incident that counts as a backlog.
+    pub alert_backlog_max_age: Duration,
     pub migrate_only: bool,
     /// Whether this process applies `sqlx::migrate!()` at startup.
     ///
@@ -104,6 +120,38 @@ impl ServerConfig {
             &env_or("DIAGNOSTIC_RUN_MIGRATIONS", "true"),
         )?;
         validate_migration_switches(migrate_only, run_migrations)?;
+        let alert_smtp_url = optional("ALERT_SMTP_URL");
+        let alert_smtp_from = optional("ALERT_SMTP_FROM");
+        let alert_smtp_to = optional("ALERT_SMTP_TO");
+        validate_smtp(
+            alert_smtp_url.as_deref(),
+            alert_smtp_from.as_deref(),
+            alert_smtp_to.as_deref(),
+        )?;
+        let alert_spike_baseline_windows: u32 = env_or("ALERT_SPIKE_BASELINE_WINDOWS", "24")
+            .parse()
+            .context("parse ALERT_SPIKE_BASELINE_WINDOWS")?;
+        if !(1..=720).contains(&alert_spike_baseline_windows) {
+            bail!("ALERT_SPIKE_BASELINE_WINDOWS must be between 1 and 720");
+        }
+        let alert_spike_min_incidents: u32 = env_or("ALERT_SPIKE_MIN_INCIDENTS", "10")
+            .parse()
+            .context("parse ALERT_SPIKE_MIN_INCIDENTS")?;
+        if alert_spike_min_incidents == 0 {
+            bail!("ALERT_SPIKE_MIN_INCIDENTS must be at least 1");
+        }
+        let alert_spike_factor: f64 = env_or("ALERT_SPIKE_FACTOR", "3")
+            .parse()
+            .context("parse ALERT_SPIKE_FACTOR")?;
+        if !alert_spike_factor.is_finite() || alert_spike_factor < 1.0 {
+            bail!("ALERT_SPIKE_FACTOR must be a number of at least 1");
+        }
+        let alert_backlog_max_incidents: u32 = env_or("ALERT_BACKLOG_MAX_INCIDENTS", "100")
+            .parse()
+            .context("parse ALERT_BACKLOG_MAX_INCIDENTS")?;
+        if alert_backlog_max_incidents == 0 {
+            bail!("ALERT_BACKLOG_MAX_INCIDENTS must be at least 1");
+        }
         let kms_region = env_or("KMS_REGION", "us-east-1");
         let kms_endpoint = env_or(
             "KMS_ENDPOINT",
@@ -184,9 +232,16 @@ impl ServerConfig {
                 .map(|value| value.parse().context("parse ALERT_WEBHOOK_URL"))
                 .transpose()?,
             alert_webhook_secret: optional("ALERT_WEBHOOK_SECRET"),
-            alert_smtp_url: optional("ALERT_SMTP_URL"),
-            alert_smtp_from: optional("ALERT_SMTP_FROM"),
-            alert_smtp_to: optional("ALERT_SMTP_TO"),
+            alert_smtp_url,
+            alert_smtp_from,
+            alert_smtp_to,
+            alert_dedupe_window: positive_seconds("ALERT_DEDUPE_WINDOW_SECONDS", "3600")?,
+            alert_spike_window: positive_seconds("ALERT_SPIKE_WINDOW_SECONDS", "3600")?,
+            alert_spike_baseline_windows,
+            alert_spike_min_incidents,
+            alert_spike_factor,
+            alert_backlog_max_incidents,
+            alert_backlog_max_age: positive_seconds("ALERT_BACKLOG_MAX_AGE_SECONDS", "900")?,
             migrate_only,
             run_migrations,
             ingest_enabled: parse_bool(
@@ -202,7 +257,7 @@ impl ServerConfig {
     /// position of the intake switch without an environment, a database, or an
     /// object store — the switch is a routing decision, and that is all these
     /// tests exercise.
-    #[cfg(test)]
+    #[doc(hidden)]
     pub fn for_router_tests(ingest_enabled: bool) -> Self {
         Self {
             bind_address: "127.0.0.1:0".parse().expect("valid test bind address"),
@@ -243,6 +298,13 @@ impl ServerConfig {
             alert_smtp_url: None,
             alert_smtp_from: None,
             alert_smtp_to: None,
+            alert_dedupe_window: Duration::from_secs(3600),
+            alert_spike_window: Duration::from_secs(3600),
+            alert_spike_baseline_windows: 24,
+            alert_spike_min_incidents: 10,
+            alert_spike_factor: 3.0,
+            alert_backlog_max_incidents: 100,
+            alert_backlog_max_age: Duration::from_secs(900),
             migrate_only: false,
             run_migrations: false,
             ingest_enabled,
@@ -260,6 +322,41 @@ fn validate_migration_switches(migrate_only: bool, run_migrations: bool) -> anyh
         bail!("DIAGNOSTIC_MIGRATE_ONLY requires DIAGNOSTIC_RUN_MIGRATIONS to stay enabled");
     }
     Ok(())
+}
+
+/// SMTP alerting is all or nothing.
+///
+/// A partial setup used to start cleanly and then fail every SMTP delivery
+/// permanently (`smtp_from_missing`, …). Refusing it at startup names the
+/// missing variable once instead of leaving a failed row per alert.
+fn validate_smtp(url: Option<&str>, from: Option<&str>, to: Option<&str>) -> anyhow::Result<()> {
+    let present = [url, from, to]
+        .iter()
+        .filter(|value| value.is_some())
+        .count();
+    if present == 0 {
+        return Ok(());
+    }
+    if present != 3 {
+        bail!("ALERT_SMTP_URL, ALERT_SMTP_FROM and ALERT_SMTP_TO must be set together");
+    }
+    from.unwrap_or_default()
+        .parse::<lettre::message::Mailbox>()
+        .context("parse ALERT_SMTP_FROM")?;
+    to.unwrap_or_default()
+        .parse::<lettre::message::Mailbox>()
+        .context("parse ALERT_SMTP_TO")?;
+    Ok(())
+}
+
+fn positive_seconds(name: &str, default: &str) -> anyhow::Result<Duration> {
+    let seconds: u64 = env_or(name, default)
+        .parse()
+        .with_context(|| format!("parse {name}"))?;
+    if seconds == 0 {
+        bail!("{name} must be at least 1");
+    }
+    Ok(Duration::from_secs(seconds))
 }
 
 fn required(name: &str) -> anyhow::Result<String> {
@@ -301,6 +398,29 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(error.contains("DIAGNOSTIC_RUN_MIGRATIONS"), "{error}");
+    }
+
+    #[test]
+    fn smtp_alerting_is_configured_completely_or_not_at_all() {
+        assert!(validate_smtp(None, None, None).is_ok());
+        assert!(validate_smtp(
+            Some("smtp://mail.test:25"),
+            Some("Cognia <alerts@cognia.test>"),
+            Some("ops@cognia.test"),
+        )
+        .is_ok());
+        let partial = validate_smtp(Some("smtp://mail.test:25"), None, Some("ops@cognia.test"))
+            .unwrap_err()
+            .to_string();
+        assert!(partial.contains("ALERT_SMTP_FROM"), "{partial}");
+        let invalid = validate_smtp(
+            Some("smtp://mail.test:25"),
+            Some("not an address"),
+            Some("ops@cognia.test"),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(invalid.contains("ALERT_SMTP_FROM"), "{invalid}");
     }
 
     #[test]

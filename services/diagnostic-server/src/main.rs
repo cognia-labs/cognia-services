@@ -2,8 +2,8 @@ use std::{sync::Arc, time::Duration};
 
 use anyhow::Context;
 use cognia_diagnostic_server::{
-    build_processor, build_router, AlertDispatcher, AlertWorker, AppState, ArtifactStore,
-    DiagnosticRepository, GrantSigner, PrivacyGate, RetentionWorker, ServerConfig,
+    build_processor, build_router, AlertDispatcher, AlertPolicy, AlertWorker, AppState,
+    ArtifactStore, DiagnosticRepository, GrantSigner, PrivacyGate, RetentionWorker, ServerConfig,
 };
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
@@ -45,7 +45,8 @@ async fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let repository = DiagnosticRepository::new(pool);
+    let repository =
+        DiagnosticRepository::new(pool).with_alert_policy(AlertPolicy::from_config(&config));
     let artifacts = ArtifactStore::from_config(&config, repository.clone())?;
     let signer = GrantSigner::new(config.grant_signing_key.as_bytes())?;
     let privacy = PrivacyGate::v1();

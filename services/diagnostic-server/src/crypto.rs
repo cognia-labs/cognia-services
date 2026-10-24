@@ -224,7 +224,7 @@ pub fn encrypt_artifact(
     let ciphertext = Aes256Gcm::new_from_slice(dek)
         .expect("AES-256 key has fixed length")
         .encrypt(
-            Nonce::from_slice(&nonce_bytes),
+            &Nonce::from(nonce_bytes),
             Payload {
                 msg: plaintext,
                 aad: &aad,
@@ -251,11 +251,13 @@ pub fn decrypt_artifact(
     let ciphertext = envelope
         .get(HEADER_BYTES..)
         .ok_or_else(|| anyhow::anyhow!("truncated diagnostic artifact envelope"))?;
+    let nonce = Nonce::try_from(nonce)
+        .map_err(|_| anyhow::anyhow!("truncated diagnostic artifact envelope"))?;
     let aad = artifact_aad(tenant_id, metadata.key_version);
     let plaintext = Aes256Gcm::new_from_slice(dek)
         .expect("AES-256 key has fixed length")
         .decrypt(
-            Nonce::from_slice(nonce),
+            &nonce,
             Payload {
                 msg: ciphertext,
                 aad: &aad,

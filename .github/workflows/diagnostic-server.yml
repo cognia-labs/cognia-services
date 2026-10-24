@@ -54,8 +54,53 @@ jobs:
       - name: Format
         run: cargo fmt --check
 
+      - name: Clippy (deny warnings)
+        run: cargo clippy --locked --all-targets -- -D warnings
+
       - name: Run Rust tests
         run: cargo test --locked
+
+  # The repository's SQL — alert windows and dedupe, the backlog query,
+  # credential deletion — against a real PostgreSQL. `sqlx::test` creates and
+  # migrates one database per test, so the role needs CREATEDB (the image's
+  # superuser has it). These tests are #[ignore]d so `cargo test` above stays
+  # database-free.
+  postgres:
+    name: Rust tests against PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: services/diagnostic-server
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup pinned Rust toolchain
+        run: rustup show active-toolchain
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: "services/diagnostic-server -> target"
+          key: postgres
+
+      - name: Database-backed tests
+        run: cargo test --locked --test postgres -- --ignored
 
   diagnostics:
     name: Diagnostics stack
