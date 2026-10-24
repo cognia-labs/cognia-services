@@ -49,7 +49,7 @@ pub struct ShareMeta {
 }
 
 /// Owner-only stats projection for `GET /v1/share/:code/stats`. Matches the
-/// `ShareStats` wire type in `lib/share/types.ts` (camelCase, omits absent
+/// `ShareStats` wire type in the app's `lib/share/types.ts` (camelCase, omits absent
 /// optionals).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

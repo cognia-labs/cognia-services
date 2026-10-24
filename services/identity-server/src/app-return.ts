@@ -3,7 +3,7 @@
  *
  * On a phone the official account's Feishu sign-in runs in the Feishu app's
  * WebView (the app hands its whole authorize request to Feishu through an
- * Applink, lib/oauth/app-handoff.ts), and our return page hands the code back
+ * Applink, the app's lib/oauth/app-handoff.ts), and our return page hands the code back
  * with `cn.cognia.app:/auth/callback`. Whether that jump happens is Feishu's
  * call: it usually asks "leave Feishu?", but it can also silently refuse, and
  * the person then switches back to Cognia by hand with a code the app never

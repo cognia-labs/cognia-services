@@ -2,10 +2,10 @@
  * RFC 8785 (JSON Canonicalization Scheme): the encoding of everything this
  * protocol hashes or signs.
  *
- * A copy of `lib/plugin/character-pack/canonical-json.ts` (which explains the
+ * A copy of the app's `lib/plugin/character-pack/canonical-json.ts` (which explains the
  * leaf-versus-structure split), because this package is dependency-free and
  * is also bundled into the sync Worker. `jcs.test.ts` runs the same golden
- * vectors (`lib/plugin/character-pack/__fixtures__/jcs-vectors.json`), so the
+ * vectors (the app's `lib/plugin/character-pack/__fixtures__/jcs-vectors.json`), so the
  * two cannot drift.
  */
 

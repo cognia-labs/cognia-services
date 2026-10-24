@@ -19,8 +19,8 @@ Cognia 的云端与自托管服务，以及它们和应用共享的协议契约�
 | `packages/sync-protocol`     | `@cognia/sync-protocol`: account sync protocol v1                   | TypeScript, dependency-free         |
 | `packages/status-contract`   | `@cognia/status-contract`: public status contract v1 + relay health | TypeScript, dependency-free         |
 
-ADR numbers refer to the decision records in the app repository
-(`docs/content/docs/en/adr/`).
+ADR numbers refer to the decision records in the app repository. The ones these
+services follow are copied, in English and Chinese, under [`docs/adr/`](docs/adr/).
 
 ## Building a service
 
@@ -28,16 +28,27 @@ Each service's README has the full commands. In short:
 
 ```bash
 # Rust services (toolchain pinned by rust-toolchain.toml)
-cargo test --manifest-path services/signaling-server/Cargo.toml
+cargo test --locked --manifest-path services/signaling-server/Cargo.toml
 # Workers and packages (Node from .nvmrc, pnpm from each packageManager);
 # every one is its own pnpm root, so run inside its directory
 pnpm install --frozen-lockfile && pnpm typecheck && pnpm test
+```
+
+To run one task across every unit, use the repository script (also exposed as
+root `package.json` scripts):
+
+```bash
+node scripts/each.mjs --list                # every unit, its kind and directory
+node scripts/each.mjs test                  # install / typecheck / lint / test / build
+node scripts/each.mjs test --only sync,share-worker
 ```
 
 Every service has its own workflow under `.github/workflows/`, triggered only
 by changes to that service (and the contract packages it links).
 `images.yml` publishes `ghcr.io/cognia-labs/cognia-{signaling,share,diagnostics}`:
 `edge` and `sha-…` from `main`, semver tags and `latest` from `v*` tags.
+`repo.yml` runs the repository tooling tests, the Markdown link check and
+Prettier on every change.
 
 ## Contracts shared with the app
 
@@ -77,6 +88,19 @@ The status page is part of the app's static export. The status deploy builds
 it from the app revision pinned in `integrations/cognia-next.json`, so a
 status UI change ships by bumping that pin. The update and Logto mail Workers
 deploy by hand with `pnpm exec wrangler deploy` (see their READMEs).
+
+## Documentation
+
+| Read                                   | For                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| [docs/README.md](docs/README.md)       | Index of every guide, runbook and per-service document              |
+| [docs/contracts.md](docs/contracts.md) | What the app consumes from here, how it is pinned, how to change it |
+| [docs/releasing.md](docs/releasing.md) | Version tags, images, deploys and rollback                          |
+| [docs/adr/](docs/adr/README.md)        | The decision records these services follow (copied from the app)    |
+| [CONTRIBUTING.md](CONTRIBUTING.md)     | Toolchains, local setup, change rules, commits and pull requests    |
+| [SECURITY.md](SECURITY.md)             | Reporting a vulnerability privately                                 |
+| [AGENTS.md](AGENTS.md)                 | Rules and commands for coding agents                                |
+| [CHANGELOG.md](CHANGELOG.md)           | Changes per version                                                 |
 
 ## Licence
 

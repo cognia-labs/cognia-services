@@ -42,8 +42,9 @@ wrangler secret put SUBSCRIBER_ENC_KEYS    # {"e1":"<base64url>"}
 wrangler secret put IP_BUCKET_SECRET
 wrangler secret put PROBE_SECRETS          # {} until an external probe is enrolled
 wrangler secret put OPERATOR_ALERT_WEBHOOK # optional, fixed operator destination
-# 3. Assets: from the repo root, after `pnpm build`
-node scripts/build/build-status-site.mjs
+# 3. Assets: from a cognia-next checkout, after `pnpm build` (deploy.yml does
+#    this from the revision pinned in integrations/cognia-next.json)
+node scripts/build/build-status-site.mjs --dest <this repo>/services/status-server/worker/assets
 # 4. Deploy (records the build SHA reported by /api/status/v1/healthz)
 pnpm run deploy -- --var BUILD_SHA:$(git rev-parse HEAD)
 ```

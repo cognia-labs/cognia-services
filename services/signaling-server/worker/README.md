@@ -3,8 +3,8 @@
 Cloudflare Worker + Durable Objects build of the WebRTC signaling rendezvous
 (ADR-0021). It is the Cloudflare-native counterpart to the native axum server
 in `../` — both speak the **same wire protocol** (the shared `cognia-signaling-core`
-crate), so the existing mobile (`lib/signaling/client.ts`) and desktop
-(`src-tauri/.../signaling/client.rs`) clients work against either backend.
+crate), so the app's mobile (`lib/signaling/client.ts`) and desktop
+(`crates/cognia-companion/src/signaling/client.rs`) clients work against either backend.
 
 ## How it maps
 
@@ -111,7 +111,7 @@ subdomain, then re-run `wrangler deploy`.
 
 The signaling hostname is configured in **one** place per side, kept in sync:
 
-- **App default** — `DEFAULT_SIGNALING_URL` in `lib/signaling/types.ts` reads
+- **App default** — `DEFAULT_SIGNALING_URL` in the app's `lib/signaling/types.ts` reads
   the `NEXT_PUBLIC_SIGNALING_URL` build var, falling back to
   `wss://signaling.cognia.cn/signaling`. Set the env var at `pnpm build`
   time to point every shell (browser/Tauri/Capacitor) and the Rust desktop

@@ -1,5 +1,5 @@
 /**
- * Account Sync Protocol v1 (ADR-0215, `docs/content/docs/en/data/account-sync-protocol.mdx`):
+ * Account Sync Protocol v1 (ADR-0215, `docs/protocols/account-sync-protocol.md`):
  * what the Cognia client and the sync Worker must agree on byte for byte.
  */
 

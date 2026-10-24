@@ -54,4 +54,4 @@ Pages project on that path, so `/v1/*` hits the API and everything else
   secrecy. `_redirects` alone cannot do this because Pages serves existing
   exported `.html` files before it consults redirect rules.
 - Keep the host in sync with the app's `NEXT_PUBLIC_SHARE_URL` /
-  `DEFAULT_SHARE_URL` (`lib/share/config.ts`).
+  `DEFAULT_SHARE_URL` (the app's `lib/share/config.ts`).

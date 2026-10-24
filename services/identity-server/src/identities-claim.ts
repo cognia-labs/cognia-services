@@ -5,7 +5,7 @@
  * A self-hosted deployment learns these from its collaboration server reading
  * the Logto Management API. A personal official account has no collaboration
  * server, so the issuer says it itself: the client links each identity onto
- * its local `User` (`lib/identity/link-signed-in-identities.ts`), which is how
+ * its local `User` (the app's `lib/identity/link-signed-in-identities.ts`), which is how
  * a Feishu bot recognizes the signed-in owner as `lark:<tenant_key>:<union_id>`.
  *
  * Only the provider, its stable subject and its tenant are published: never a

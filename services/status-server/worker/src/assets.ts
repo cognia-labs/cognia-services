@@ -2,7 +2,7 @@
  * Static `/status` assets (the status-only slice of the app's static export).
  *
  * The asset binding only holds the status page and the chunks it references
- * (scripts/build/build-status-site.mjs), so nothing else of the application
+ * (the app's scripts/build/build-status-site.mjs), so nothing else of the application
  * export is reachable here. HTML gets the runtime `<meta>` that tells the
  * page it is the primary deployment and where its same-origin API lives, and
  * a CSP that limits it to this origin; the app's PWA manifest link is removed.

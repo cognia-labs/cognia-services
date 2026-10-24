@@ -160,7 +160,7 @@ delivery or unlimited provider throughput.
 
 ## Local Logto transport / 本机 Logto 连接复用
 
-The local Compose overlay preloads `deploy/compose/logto-mail/preload.mjs` and
+The app's local Compose overlay preloads `deploy/compose/logto-mail/preload.mjs` and
 mounts a small Got adapter beside the pinned HTTP Email connector. This adapter
 extends the connector's existing Got instance with a bounded HTTPS pool: up to
 64 active and 32 idle sockets per origin, a 90-second socket timeout, and a

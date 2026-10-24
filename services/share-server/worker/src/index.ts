@@ -193,7 +193,7 @@ function hexToBytes(value: string): Uint8Array | null {
  * Verify the bearer as a collaboration-plane grant — ADR-0149 §8.
  *
  * The wire format is `base64url(claimsJson).base64url(hmacSha256(payload))`,
- * the same one `crates/cognia-tenant-auth` mints and `core/src/grant.rs`
+ * the same one the app's `crates/cognia-tenant-auth` mints and `core/src/grant.rs`
  * verifies. A frozen vector (`../fixtures/grant-wire-vector.json`) pins all
  * three against each other, because a silent divergence would look like
  * "sharing stopped working" and nothing else.

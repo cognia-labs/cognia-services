@@ -60,8 +60,8 @@ clients connect with `wss://<app>.fly.dev/signaling`.
 `*.workers.dev`) and the Fly app — manual dispatch only, gated by the
 `DEPLOY_ENABLED` repo variable plus environment-scoped
 `CLOUDFLARE_API_TOKEN` / `FLY_API_TOKEN` secrets and the `FLY_SIGNALING_APP`
-variable. See [CI_CD.md](https://github.com/MaxQian888/cognia-next/blob/dev/docs/development/CI_CD.md) → "Deploy (services)" for the full matrix and the
-one-time provisioning steps.
+variable. See [Deploying](../../README.md#deploying) in the repository README for the full
+matrix of secrets and variables.
 
 ## Resource expectations
 

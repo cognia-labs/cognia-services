@@ -98,7 +98,7 @@ impl PeerRole {
 /// - `Signal` (the default, and what every pre-lane peer implicitly sends):
 ///   the SDP / ICE / `hello` handshake. Small, rare, tightly rate-limited.
 /// - `Data`: application frames carried *through* the rendezvous when no
-///   DataChannel is open — the same bytes `lib/tauri/datachannel-framing.ts`
+///   DataChannel is open — the same bytes the app's `lib/tauri/datachannel-framing.ts`
 ///   would have put on the DataChannel. Wider bucket, larger frame cap.
 ///
 /// A lane is a budget label, not a trust boundary: a peer that mislabels a

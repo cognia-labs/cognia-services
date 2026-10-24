@@ -49,8 +49,9 @@ version and digest against its catalog, this Worker can withhold a release but
 never substitute one. `manual=1` (someone asked the host to update) skips the
 percentage, never a pause or abort.
 
-The release is signed and published offline with
-`scripts/release/update-catalog.mjs` (`pnpm update:catalog`):
+The release is signed and published offline with the app repository's
+[`scripts/release/update-catalog.mjs`](https://github.com/MaxQian888/cognia-next/blob/dev/scripts/release/update-catalog.mjs)
+(`pnpm update:catalog`). Run these from a cognia-next checkout:
 
 ```bash
 pnpm update:catalog keygen --keys ~/cognia-update-keys      # once, offline

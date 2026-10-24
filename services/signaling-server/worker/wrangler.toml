@@ -25,7 +25,7 @@ compatibility_date = "2026-07-29"
 
 # Custom domain — THE single place to set the deploy hostname. Keep it in sync
 # with the app's signaling URL (the `NEXT_PUBLIC_SIGNALING_URL` build var, or
-# the `DEFAULT_SIGNALING_URL` fallback in lib/signaling/types.ts). On `wrangler
+# the `DEFAULT_SIGNALING_URL` fallback in the app's lib/signaling/types.ts). On `wrangler
 # deploy` this provisions the hostname + route automatically — it REQUIRES the
 # matching zone (here `cognia.cn`) to be active on this Cloudflare account.
 # Change it to your own domain, or leave it commented to deploy to the
