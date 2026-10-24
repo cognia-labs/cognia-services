@@ -996,7 +996,14 @@ mod tests {
         let (tx, mut rx) = mpsc::channel(PEER_OUTBOUND_BUFFER);
         let peer_id = state.registry.next_peer_id();
         let mut rooms = Vec::new();
-        handle_frame(&state, peer_id, subscribe("r", PeerRole::Mobile), &tx, &mut rooms).await;
+        handle_frame(
+            &state,
+            peer_id,
+            subscribe("r", PeerRole::Mobile),
+            &tx,
+            &mut rooms,
+        )
+        .await;
         let _ = other_rx.try_recv(); // PeerJoined
         while rx.try_recv().is_ok() {} // Subscribed
 
@@ -1010,7 +1017,10 @@ mod tests {
 
         // 6 + 6 > 8: refused, not delivered, and the sender is told why.
         handle_frame(&state, peer_id, relay(RelayLane::Data), &tx, &mut rooms).await;
-        assert!(other_rx.try_recv().is_err(), "over-quota frame must not be delivered");
+        assert!(
+            other_rx.try_recv().is_err(),
+            "over-quota frame must not be delivered"
+        );
         match rx.try_recv().expect("quota error") {
             ServerFrame::Error { code, message } => {
                 assert_eq!(code, RELAY_QUOTA_EXCEEDED_CODE);
@@ -1018,7 +1028,10 @@ mod tests {
             }
             other => panic!("expected quota error, got {other:?}"),
         }
-        assert_eq!(state.metrics.frames_rejected_quota.load(Ordering::Relaxed), 1);
+        assert_eq!(
+            state.metrics.frames_rejected_quota.load(Ordering::Relaxed),
+            1
+        );
 
         // Signalling still flows, so the peers can still reach a DataChannel.
         handle_frame(&state, peer_id, relay(RelayLane::Signal), &tx, &mut rooms).await;

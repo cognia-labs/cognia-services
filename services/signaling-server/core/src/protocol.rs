@@ -122,7 +122,12 @@ pub fn verify_subscribe_proof(
     expected_challenge: &str,
     now_ms: i64,
 ) -> Result<(), AdmissionError> {
-    verify_proof(descriptor, proof, now_ms, Freshness::Admission(expected_challenge))
+    verify_proof(
+        descriptor,
+        proof,
+        now_ms,
+        Freshness::Admission(expected_challenge),
+    )
 }
 
 /// A peer's proof as the relay forwards it in a room snapshot.
@@ -171,7 +176,9 @@ fn verify_proof(
         return Err(AdmissionError::InvalidSession);
     }
     let stale = match freshness {
-        Freshness::Admission(_) => proof.issued_at.abs_diff(now_ms) > SUBSCRIBE_CLOCK_SKEW_MS as u64,
+        Freshness::Admission(_) => {
+            proof.issued_at.abs_diff(now_ms) > SUBSCRIBE_CLOCK_SKEW_MS as u64
+        }
         Freshness::Peer => proof.issued_at.saturating_sub(now_ms) > SUBSCRIBE_CLOCK_SKEW_MS,
     };
     if stale {

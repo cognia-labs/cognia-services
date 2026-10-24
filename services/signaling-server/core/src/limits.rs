@@ -252,11 +252,19 @@ mod tests {
     #[test]
     fn quota_charges_until_the_limit_and_refuses_the_crossing_frame_whole() {
         let mut q = RelayByteQuota::with_window(100, 1_000.0);
-        assert_eq!(q.try_charge(60, 0.0), QuotaDecision::Allowed { remaining: 40 });
-        assert_eq!(q.try_charge(40, 10.0), QuotaDecision::Allowed { remaining: 0 });
+        assert_eq!(
+            q.try_charge(60, 0.0),
+            QuotaDecision::Allowed { remaining: 40 }
+        );
+        assert_eq!(
+            q.try_charge(40, 10.0),
+            QuotaDecision::Allowed { remaining: 0 }
+        );
         assert_eq!(
             q.try_charge(1, 250.0),
-            QuotaDecision::Exceeded { retry_after_ms: 750 }
+            QuotaDecision::Exceeded {
+                retry_after_ms: 750
+            }
         );
         // The refused frame was not charged.
         assert_eq!(q.used_bytes(), 100);
@@ -265,18 +273,30 @@ mod tests {
     #[test]
     fn quota_resets_when_the_window_ends() {
         let mut q = RelayByteQuota::with_window(10, 1_000.0);
-        assert!(matches!(q.try_charge(10, 0.0), QuotaDecision::Allowed { .. }));
-        assert!(matches!(q.try_charge(1, 999.0), QuotaDecision::Exceeded { .. }));
+        assert!(matches!(
+            q.try_charge(10, 0.0),
+            QuotaDecision::Allowed { .. }
+        ));
+        assert!(matches!(
+            q.try_charge(1, 999.0),
+            QuotaDecision::Exceeded { .. }
+        ));
         assert!(!q.is_expired(999.0));
         assert!(q.is_expired(1_000.0));
-        assert_eq!(q.try_charge(10, 1_000.0), QuotaDecision::Allowed { remaining: 0 });
+        assert_eq!(
+            q.try_charge(10, 1_000.0),
+            QuotaDecision::Allowed { remaining: 0 }
+        );
     }
 
     #[test]
     fn a_fresh_quota_is_expired_and_starts_its_window_on_first_charge() {
         let mut q = RelayByteQuota::with_window(10, 1_000.0);
         assert!(q.is_expired(0.0));
-        assert!(matches!(q.try_charge(1, 5_000.0), QuotaDecision::Allowed { .. }));
+        assert!(matches!(
+            q.try_charge(1, 5_000.0),
+            QuotaDecision::Allowed { .. }
+        ));
         assert!(!q.is_expired(5_999.0));
     }
 
@@ -304,7 +324,10 @@ mod tests {
         assert_eq!(room_quota_bytes_from(None), DATA_LANE_ROOM_QUOTA_BYTES);
         assert_eq!(room_quota_bytes_from(Some("")), DATA_LANE_ROOM_QUOTA_BYTES);
         assert_eq!(room_quota_bytes_from(Some("0")), DATA_LANE_ROOM_QUOTA_BYTES);
-        assert_eq!(room_quota_bytes_from(Some("nope")), DATA_LANE_ROOM_QUOTA_BYTES);
+        assert_eq!(
+            room_quota_bytes_from(Some("nope")),
+            DATA_LANE_ROOM_QUOTA_BYTES
+        );
         assert_eq!(room_quota_bytes_from(Some(" 1048576 ")), 1_048_576);
     }
 

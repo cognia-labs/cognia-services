@@ -59,6 +59,9 @@ jobs:
         with:
           tool: cargo-llvm-cov
 
+      - name: Format
+        run: cargo fmt --check
+
       - name: Clippy (deny warnings)
         # `--workspace` covers the shared `core/` crate (the Worker is excluded
         # from the workspace and built in the separate `worker` job below).
@@ -113,6 +116,9 @@ jobs:
         with:
           workspaces: "services/signaling-server/worker -> target"
           key: signaling-server-wasm32-unknown-unknown
+
+      - name: Format
+        run: cargo fmt --check
 
       - name: Clippy (wasm, deny warnings)
         run: cargo clippy --target wasm32-unknown-unknown -- -D warnings

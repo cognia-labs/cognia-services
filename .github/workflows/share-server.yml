@@ -60,6 +60,9 @@ jobs:
         with:
           tool: cargo-llvm-cov
 
+      - name: Format
+        run: cargo fmt --check
+
       - name: Clippy (deny warnings)
         run: cargo clippy --workspace --all-targets -- -D warnings
 

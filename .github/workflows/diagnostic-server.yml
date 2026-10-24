@@ -51,6 +51,9 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
           workspaces: "services/diagnostic-server -> target"
 
+      - name: Format
+        run: cargo fmt --check
+
       - name: Run Rust tests
         run: cargo test --locked
 
@@ -59,10 +62,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     # `services/diagnostic-server/deploy` is its own compose project (Postgres +
-    # MinIO + a KMS stub), not part of the self-host suite the tiers above
-    # exercise. It gets its own job because its whole bring-up sequence —
-    # migrate, then seed, then serve — is what used to be broken: the tenant
-    # fixture ran as a Postgres init hook, before the tables existed.
+    # MinIO + a KMS stub), separate from the app's self-host compose suite. It
+    # brings the stack up in order — migrate, then seed, then serve — and checks
+    # each step: the tenant fixture once ran as a Postgres init hook, before the
+    # tables existed.
     steps:
       - uses: actions/checkout@v7
 
