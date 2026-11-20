@@ -4,7 +4,8 @@
 > maintained copy. Paths outside `services/`, `packages/` and `docs/` refer to
 > [cognia-next](https://github.com/MaxQian888/cognia-next).
 
-> **Status:** §2–7 and §9 implemented behind a build flag · §8, §10–13 planned
+> **Status:** §2–7 and §9 implemented behind a build flag, except settings
+> merged by property (§7.2, §9), which the client does not use yet · §8, §10–13 planned
 
 Normative companion to [ADR-0215](../adr/en/0215-one-person-one-encrypted-sync-space-many-writable-hosts.md).
 The ADR records _why_; this page records _the bytes_. It may be refined
@@ -297,7 +298,11 @@ with the synced rows it already holds:
 - **Seed**, on its own, when this device holds no synced rows or the account's
   op log is empty (the first device): every synced row gets field clocks
   synthesized as `hlc = (row.updatedAt ?? row.createdAt ?? now, 0, deviceId)`
-  and goes into the outbox whole.
+  and goes into the outbox whole. A settings key, or a property of a key
+  merged by property (§7.2), that equals the app's default is not data this
+  device holds: every save writes defaults into the row, so they are neither
+  counted in the preview nor seeded. A seed that is interrupted stays owed and
+  runs again on the next start.
 - **Ask**, when both hold data, with a preview (rows per table here, ops in
   the account's log):
   - **merge** (the default): seed as above; the account's ops then merge
@@ -377,9 +382,24 @@ row stays local and the device says so.
 Clocks are encoded HLCs (§9). Each field carries its own clock, so one op can
 carry fields written at different times: the outbox keeps only _which_ fields
 changed, and the op is built at push time from the row's current values, which
-coalesces a stream of writes (a reply being generated) into one op. Settings
-travel as virtual rows `t: "settings", id: <key>` with the value in field `value`.
+coalesces a stream of writes (a reply being generated) into one op.
 `k: "append"` and `k: "crdt"` (Yjs updates) are reserved.
+
+Settings travel as virtual rows `t: "settings", id: <key>`. The client's sync
+schema (§9) says, per key, how it merges:
+
+- **Whole value** (the default): the value is in field `value`.
+- **By property**, for a key whose value is an object of independent
+  preferences (properties that must change together stay one key merged as a
+  whole): each changed property is in field `value.<property>`, and
+  `[null, hlc]` removes it. Such a key holds an object or nothing, and its
+  properties never hold `null`. A writer clears the key by sending `value` as
+  `null`; it sends no other `value`. One level only: a property whose value is
+  an object merges as a whole.
+
+How a key merges is part of the sync schema: changing it bumps `schemaVer`.
+`packages/sync-protocol/src/settings.ts` holds the field names and the merge
+(§9).
 
 ### 7.3 Push
 
@@ -466,8 +486,24 @@ inbox as received, replaying it when it can.
   greater than its own and shows "update Cognia to see changes from your other
   devices". Fields it does not know are kept in `u` with their clocks and
   re-emitted untouched on its next write of that row.
-- Ops of a class the device switched off are passed over; switching the class
-  back on re-seeds it and pulls from 0.
+- Settings merged by property (§7.2): `value` is a write of the whole object.
+  What it holds is set and every other property is removed, as of its clock,
+  except a property written later. The key keeps the clock of its latest
+  whole write as its `value` clock, which stands for every property that has
+  no clock of its own; a property keeps its own clock only while that clock
+  is later. A property write applies when its clock is later than the
+  property's clock (its own, else the key's `value` clock), so a property
+  write older than a whole write loses even when it arrives after it, and the
+  outcome does not depend on arrival order. A `value` op from a device on an
+  older schema (which merged the key as a whole) is read the same way, and
+  `value` clocks stored before a key merged by property need no migration. A
+  key with no property left is absent and the app's default applies
+  (`mergeSettingProperties`).
+- Ops of a class the device switched off are passed over. Its own writes are
+  still captured with their clocks and wait in the outbox, unsent. Switching
+  the class back on sends them, seeds rows that have no clock yet and pulls
+  from 0, so where both sides changed the same field the later change wins on
+  every device.
 
 ## 10. Blobs
 
@@ -543,6 +579,7 @@ the new epoch envelope), `client_too_old`, `snapshot_required`, `quota_blob`,
 
 `packages/sync-protocol/fixtures/` (a zero-`@/` package shared by the client and the Worker) holds the frozen
 vectors: `v1.json` (canonical encoding, signatures, HPKE seals, the registry)
-and `v1-ops.json` (HLC order, padding, canonical ops and AAD, a sealed op, merge). The client, the
+`v1-ops.json` (HLC order, padding, canonical ops and AAD, a sealed op, merge)
+and `v1-settings.json` (settings property fields and their merge). The client, the
 Worker and any Rust consumer must all pass them. That is the only defense
 against format drift (cf. the three grant-format copies today).

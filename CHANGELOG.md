@@ -6,6 +6,16 @@ Workers deploy on their own; the app pins commits, not versions. See
 
 ## Unreleased
 
+- Sync protocol: settings keys can merge by property (§7.2, §9). Each changed
+  property of such a key travels in its own field `value.<property>`, so two
+  devices that change different properties at once both keep their change;
+  `value` stays a write of the whole object, which keeps ops and stored clocks
+  from devices on the older schema merging correctly. `@cognia/sync-protocol`
+  adds `mergeSettingProperties` and the frozen `fixtures/v1-settings.json`.
+  The spec also states two client rules the app already follows: defaults are
+  not seeded on join, and a class switched off still captures its writes and
+  sends them when switched back on. The app needs a pin bump to use it.
+
 ## 0.1.0 — 2026-10-24
 
 First release after the services moved out of

@@ -1,0 +1,280 @@
+{
+  "//": "Account Sync Protocol v1 settings vectors. Frozen: never regenerate to fix a test (see scripts/generate-settings-fixtures.ts).",
+  "fields": {
+    "named": [
+      {
+        "property": "displayName",
+        "field": "value.displayName"
+      },
+      {
+        "property": "a.b",
+        "field": "value.a.b"
+      }
+    ],
+    "read": [
+      {
+        "field": "value",
+        "property": null
+      },
+      {
+        "field": "value.",
+        "property": null
+      },
+      {
+        "field": "value.bio",
+        "property": "bio"
+      },
+      {
+        "field": "other",
+        "property": null
+      }
+    ]
+  },
+  "merge": [
+    {
+      "name": "different properties both keep their change",
+      "current": {
+        "displayName": "Ada",
+        "bio": "old"
+      },
+      "clocks": {
+        "fields": {
+          "value": "0000000000010000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value.bio": ["new bio", "0000000000050000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"]
+      },
+      "expected": {
+        "kind": "write",
+        "value": {
+          "bio": "new bio",
+          "displayName": "Ada"
+        },
+        "clocks": {
+          "fields": {
+            "value": "0000000000010000dev_0EFX1ZYAQCMYW42HRKG4F15V6W",
+            "value.bio": "0000000000050000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"
+          }
+        }
+      }
+    },
+    {
+      "name": "an older write of a property loses",
+      "current": {
+        "bio": "mine"
+      },
+      "clocks": {
+        "fields": {
+          "value.bio": "0000000000060000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value.bio": ["theirs", "0000000000050000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"]
+      },
+      "expected": {
+        "kind": "ignore"
+      }
+    },
+    {
+      "name": "null removes a property",
+      "current": {
+        "bio": "x",
+        "displayName": "Ada"
+      },
+      "incoming": {
+        "value.bio": [null, "0000000000020000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"]
+      },
+      "expected": {
+        "kind": "write",
+        "value": {
+          "displayName": "Ada"
+        },
+        "clocks": {
+          "fields": {
+            "value.bio": "0000000000020000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+          }
+        }
+      }
+    },
+    {
+      "name": "a whole value from an older schema writes every property but newer ones",
+      "current": {
+        "displayName": "Ada",
+        "bio": "mine",
+        "avatar": "a.png"
+      },
+      "clocks": {
+        "fields": {
+          "value": "0000000000010000dev_0EFX1ZYAQCMYW42HRKG4F15V6W",
+          "value.bio": "0000000000090000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value": [
+          {
+            "displayName": "Grace",
+            "bio": "theirs"
+          },
+          "0000000000050000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"
+        ]
+      },
+      "expected": {
+        "kind": "write",
+        "value": {
+          "bio": "mine",
+          "displayName": "Grace"
+        },
+        "clocks": {
+          "fields": {
+            "value": "0000000000050000dev_7ZEWAM8BBBAF70YKNJZCYKARF8",
+            "value.bio": "0000000000090000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+          }
+        }
+      }
+    },
+    {
+      "name": "a property older than the whole-write clock loses even when unknown",
+      "current": {
+        "displayName": "Grace"
+      },
+      "clocks": {
+        "fields": {
+          "value": "0000000000050000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value.bio": ["late", "0000000000030000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"]
+      },
+      "expected": {
+        "kind": "ignore"
+      }
+    },
+    {
+      "name": "a null whole value clears the key but keeps newer properties",
+      "current": {
+        "bio": "x",
+        "displayName": "Ada"
+      },
+      "clocks": {
+        "fields": {
+          "value.bio": "0000000000020000dev_0EFX1ZYAQCMYW42HRKG4F15V6W",
+          "value.displayName": "0000000000080000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value": [null, "0000000000050000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"]
+      },
+      "expected": {
+        "kind": "write",
+        "value": {
+          "displayName": "Ada"
+        },
+        "clocks": {
+          "fields": {
+            "value": "0000000000050000dev_0EFX1ZYAQCMYW42HRKG4F15V6W",
+            "value.displayName": "0000000000080000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+          }
+        }
+      }
+    },
+    {
+      "name": "a key with no property left is absent",
+      "current": {
+        "bio": "x"
+      },
+      "clocks": {
+        "fields": {
+          "value.bio": "0000000000020000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value": [null, "0000000000050000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"]
+      },
+      "expected": {
+        "kind": "write",
+        "clocks": {
+          "fields": {
+            "value": "0000000000050000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+          }
+        }
+      }
+    },
+    {
+      "name": "a stored whole-value clock is every property's clock",
+      "current": {
+        "bio": "mine"
+      },
+      "clocks": {
+        "fields": {
+          "value": "0000000000040000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value.bio": ["newer", "0000000000040000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"]
+      },
+      "expected": {
+        "kind": "write",
+        "value": {
+          "bio": "newer"
+        },
+        "clocks": {
+          "fields": {
+            "value": "0000000000040000dev_0EFX1ZYAQCMYW42HRKG4F15V6W",
+            "value.bio": "0000000000040000dev_7ZEWAM8BBBAF70YKNJZCYKARF8"
+          }
+        }
+      }
+    },
+    {
+      "name": "a whole value that is not an object removes every property",
+      "current": {
+        "bio": "x"
+      },
+      "clocks": {
+        "fields": {
+          "value.bio": "0000000000020000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      },
+      "incoming": {
+        "value": ["dark", "0000000000030000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"]
+      },
+      "expected": {
+        "kind": "write",
+        "clocks": {
+          "fields": {
+            "value": "0000000000030000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+          }
+        }
+      }
+    },
+    {
+      "name": "the tombstone and other fields are left alone",
+      "clocks": {
+        "fields": {},
+        "tombstone": "0000000000010000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+      },
+      "incoming": {
+        "value": [
+          {
+            "bio": "x"
+          },
+          "0000000000030000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        ],
+        "other": [1, "0000000000090000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"]
+      },
+      "expected": {
+        "kind": "write",
+        "value": {
+          "bio": "x"
+        },
+        "clocks": {
+          "fields": {
+            "value": "0000000000030000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+          },
+          "tombstone": "0000000000010000dev_0EFX1ZYAQCMYW42HRKG4F15V6W"
+        }
+      }
+    }
+  ]
+}

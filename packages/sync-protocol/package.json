@@ -21,7 +21,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "fixtures:generate": "tsx scripts/generate-fixtures.ts",
-    "fixtures:generate:ops": "tsx scripts/generate-op-fixtures.ts"
+    "fixtures:generate:ops": "tsx scripts/generate-op-fixtures.ts",
+    "fixtures:generate:settings": "tsx scripts/generate-settings-fixtures.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
