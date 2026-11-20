@@ -15,6 +15,11 @@ Workers deploy on their own; the app pins commits, not versions. See
   The spec also states two client rules the app already follows: defaults are
   not seeded on join, and a class switched off still captures its writes and
   sends them when switched back on. The app needs a pin bump to use it.
+- Sync protocol §7.2: a writer that sends `value` for a key merged by property
+  carries the properties without a clock of their own, not always `null`, so a
+  whole write that landed between a clear and its push is not undone on
+  devices it has not reached. Wording and doc comment only; no code or vector
+  change.
 
 ## 0.1.0 — 2026-10-24
 

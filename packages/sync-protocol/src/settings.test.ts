@@ -151,6 +151,27 @@ describe("mergeSettingProperties", () => {
     expect(Object.getPrototypeOf(result.value)).toBe(Object.prototype)
   })
 
+  it("needs a pushed whole write to carry its properties, not null", () => {
+    // Device A cleared the key, then received B's whole write W at t5 before
+    // pushing; its push carries `value` at W's clock. Device C still has its
+    // own name and has not seen W yet.
+    const w: ClockedValue = [{ displayName: "Grace" }, at(5, B)]
+    const c = { value: { displayName: "Ada" }, clocks: { fields: { [p("displayName")]: at(1) } } }
+    const arrive = (pushed: unknown) => {
+      let value: unknown = c.value
+      let clocks: RowClocks = c.clocks
+      for (const op of [{ value: [pushed, w[1]] as ClockedValue }, { value: w }]) {
+        const result = mergeSettingProperties(value, clocks, op)
+        if (result.kind === "write") ({ value, clocks } = result)
+      }
+      return value
+    }
+    // A null at W's clock removes the name, and W itself then ties and is ignored.
+    expect(arrive(null)).toBeUndefined()
+    // The properties W set, as A holds them, converge with W.
+    expect(arrive({ displayName: "Grace" })).toEqual({ displayName: "Grace" })
+  })
+
   it("converges whatever order the ops arrive in", () => {
     // Property writes from two devices on this schema, whole writes from a
     // device on the older one, and a clear.
