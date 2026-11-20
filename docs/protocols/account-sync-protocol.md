@@ -393,9 +393,14 @@ schema (§9) says, per key, how it merges:
   preferences (properties that must change together stay one key merged as a
   whole): each changed property is in field `value.<property>`, and
   `[null, hlc]` removes it. Such a key holds an object or nothing, and its
-  properties never hold `null`. A writer clears the key by sending `value` as
-  `null`; it sends no other `value`. One level only: a property whose value is
-  an object merges as a whole.
+  properties never hold `null`. A writer clears the key with a write of `value`.
+  When it sends `value`, it carries the properties that have no clock of their
+  own, as of the key's `value` clock (`null` when there are none, as right
+  after a clear): a whole write from another device may have landed between
+  the clear and the push, and a `null` at that clock would remove its
+  properties on a device it has not reached yet, which then ignores the write
+  itself as a tie. One level only: a property whose value is an object merges
+  as a whole.
 
 How a key merges is part of the sync schema: changing it bumps `schemaVer`.
 `packages/sync-protocol/src/settings.ts` holds the field names and the merge

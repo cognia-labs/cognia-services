@@ -26,8 +26,13 @@
  * - The `value` clocks a device stored before the key merged by property need
  *   no migration: they become the key's whole-write clock.
  *
- * A writer clears a key merged by property by sending `value` as `null`. A key
- * with no property left is absent, so the app's default applies.
+ * A writer clears a key merged by property with a write of `value`. Whenever it
+ * sends `value`, it carries the properties that have no clock of their own
+ * (`null` when there are none, as right after a clear): a whole write from
+ * another device may have landed between the clear and the push, and a `null`
+ * at that clock would remove its properties on a device it has not reached
+ * yet, which would then ignore the write itself as a tie. A key with no
+ * property left is absent, so the app's default applies.
  *
  * Pure: the caller reads the key's value and clocks, applies the result and
  * stores the clocks in the same transaction.
