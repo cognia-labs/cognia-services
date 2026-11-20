@@ -44,6 +44,7 @@ Import from the root, which re-exports every module below except
 | `padding`                  | PADMÉ padding of an op's plaintext before encryption.                                                                          |
 | `ops`                      | One encrypted, signed change to one row: canonical fields, AAD, op key, encrypt and decrypt, sign and verify, parse.           |
 | `merge`                    | Per-field last-writer-wins by clock, with row-level deletes (`mergeUpsert`, `mergeDelete`).                                    |
+| `settings`                 | Settings virtual rows: the `value` and `value.<property>` fields and the merge of a key merged by property.                    |
 | `registry/types`           | Registry entry and state types, device platforms.                                                                              |
 | `registry/encode`          | `entryHash` and the bytes every entry signature covers.                                                                        |
 | `registry/validate-append` | `validateAppend`, the one rule set the Worker and every client apply to each registry entry; `listActiveDevices`.              |
@@ -58,16 +59,17 @@ and data already on a sync server would stop verifying, decrypting or
 merging the same way. Fix the code, or ship protocol v2. Never regenerate a
 v1 file to make a test pass.
 
-| File               | Pins                                                                                                                                                                                 | Checked by                |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
-| `v1.json`          | Recovery key text, space ids, the approval code, epoch commit / wrap / sealed name, a device proof, and a signed registry chain with its expected hashes, head and invalid variants. | `src/fixtures.test.ts`    |
-| `v1-ops.json`      | Clock encoding and order, padding buckets, the canonical field encoding, one sealed and signed op, and merge outcomes.                                                               | `src/op-fixtures.test.ts` |
-| `jcs-vectors.json` | RFC 8785 golden vectors.                                                                                                                                                             | `src/jcs.test.ts`         |
+| File               | Pins                                                                                                                                                                                 | Checked by                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| `v1.json`          | Recovery key text, space ids, the approval code, epoch commit / wrap / sealed name, a device proof, and a signed registry chain with its expected hashes, head and invalid variants. | `src/fixtures.test.ts`          |
+| `v1-ops.json`      | Clock encoding and order, padding buckets, the canonical field encoding, one sealed and signed op, and merge outcomes.                                                               | `src/op-fixtures.test.ts`       |
+| `v1-settings.json` | Settings property field names and the merge of keys merged by property, including whole values from an older schema.                                                                 | `src/settings-fixtures.test.ts` |
+| `jcs-vectors.json` | RFC 8785 golden vectors.                                                                                                                                                             | `src/jcs.test.ts`               |
 
 Every implementation must pass them: this package in Node, the sync Worker
 (its `src/protocol-parity.test.ts` runs `v1.json` and `v1-ops.json` inside
 workerd), and any implementation that does not reuse this code, such as a future
-port to Rust.
+port to Rust. `v1-settings.json` runs in Node only: the Worker never merges.
 
 `jcs-vectors.json` is a copy. cognia-next keeps the original at
 `lib/plugin/character-pack/__fixtures__/jcs-vectors.json` (character packs and
@@ -79,10 +81,11 @@ files' `vectors` lists, so both JCS implementations agree.
 `scripts/` holds the writers that produced the frozen files. They exist so
 the vectors are reproducible and reviewable, not to be rerun.
 
-| Script                            | Command                      | Writes                 |
-| --------------------------------- | ---------------------------- | ---------------------- |
-| `scripts/generate-fixtures.ts`    | `pnpm fixtures:generate`     | `fixtures/v1.json`     |
-| `scripts/generate-op-fixtures.ts` | `pnpm fixtures:generate:ops` | `fixtures/v1-ops.json` |
+| Script                                  | Command                           | Writes                      |
+| --------------------------------------- | --------------------------------- | --------------------------- |
+| `scripts/generate-fixtures.ts`          | `pnpm fixtures:generate`          | `fixtures/v1.json`          |
+| `scripts/generate-op-fixtures.ts`       | `pnpm fixtures:generate:ops`      | `fixtures/v1-ops.json`      |
+| `scripts/generate-settings-fixtures.ts` | `pnpm fixtures:generate:settings` | `fixtures/v1-settings.json` |
 
 The op vectors live in their own file so adding them did not regenerate the
 registry vectors. A new protocol version gets a new file.
